@@ -3,10 +3,10 @@ import { join } from 'path';
 import { ISettings } from "./settings.interface";
 import { existsSync, writeFileSync, readFileSync } from 'fs';
 import { homedir } from 'os';
-import kadence = require('@kadenceproject/kadence');
-import ini = require('ini');
-import mkdirp = require('mkdirp');
-import * as R from 'ramda';
+import R from 'ramda';
+import * as kadence from '@kadenceproject/kadence';
+import * as ini from 'ini';
+import * as mkdirp from 'mkdirp';
 import * as bunyan from 'bunyan';
 import * as RotatingLogStream from 'bunyan-rotating-file-stream';
 
@@ -141,33 +141,24 @@ export class Settings implements ISettings {
     TestNetworkEnabled: number;
     TorPID: number;
     OnionAddress: string;
-    
+
     logger_: bunyan;
 
     constructor() {
 
-        if (!existsSync(join(TANGRAM_DEFAULT_DIR, 'config'))) {
-            this.write_config();
-        }
-        else {
-            this.read_config();
-        }
+        if (!existsSync(join(TANGRAM_DEFAULT_DIR, 'config'))) this.write_config(); else this.read_config();
 
-        if (!existsSync(join(TANGRAM_DEFAULT_DIR, 'tangram.db'))) {
+        if (!existsSync(join(TANGRAM_DEFAULT_DIR, 'tangram.db')))
             mkdirp.sync(join(TANGRAM_DEFAULT_DIR, 'tangram.db'));
-        }
 
-        if (!existsSync(join(KADENCE_DEFAULT_DIR, 'wallet.dat'))) {
+        if (!existsSync(join(KADENCE_DEFAULT_DIR, 'wallet.dat')))
             mkdirp.sync(join(KADENCE_DEFAULT_DIR, 'wallet.dat'));
-        }
 
-        if (!existsSync(join(KADENCE_DEFAULT_DIR, 'kadence.dht'))) {
+        if (!existsSync(join(KADENCE_DEFAULT_DIR, 'kadence.dht')))
             mkdirp.sync(join(KADENCE_DEFAULT_DIR, 'kadence.dht'));
-        }
 
-        if (!existsSync(join(KADENCE_DEFAULT_DIR, 'kadence.onion'))) {
+        if (!existsSync(join(KADENCE_DEFAULT_DIR, 'kadence.onion')))
             mkdirp.sync(join(KADENCE_DEFAULT_DIR, 'kadence.onion'));
-        }
     }
 
     private write_config(): void {
@@ -203,7 +194,6 @@ export class Settings implements ISettings {
             ],
             level: parseInt(this.VerboseLoggingEnabled.toString()) ? 'debug' : 'info'
         });
-
     }
 
     private from_json(data: any): void {
