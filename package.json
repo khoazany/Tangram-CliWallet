@@ -29,6 +29,7 @@
     "level": "^4.0.0",
     "libsodium-wrappers": "^0.7.3",
     "mkdirp": "^0.5.1",
+    "node-lmdb": "^0.6.0",
     "node-vault": "^0.9.0",
     "npid": "^0.4.0",
     "pem": "^1.12.5",
@@ -36,6 +37,7 @@
     "reflect-metadata": "^0.1.12",
     "rxjs": "^6.0.0",
     "typescript": "^2.6.2",
+    "underscore": "^1.9.1",
     "vorpal": "^1.12.0"
   },
   "devDependencies": {
@@ -49,6 +51,7 @@
     "@types/pem": "^1.9.3",
     "@types/ramda": "^0.25.36",
     "@types/supertest": "^2.0.4",
+    "@types/underscore": "^1.8.9",
     "jest": "^21.2.1",
     "nodemon": "^1.14.1",
     "prettier": "^1.11.1",
