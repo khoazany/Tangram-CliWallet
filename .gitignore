@@ -1,0 +1,26 @@
+# dependencies
+/node_modules
+
+# IDE
+/.idea
+/.awcache
+/.vscode
+
+# misc
+npm-debug.log
+.DS_Store
+she-dlp-0-20-gt.bin
+
+# example
+/quick-start
+
+# tests
+/test
+/coverage
+/.nyc_output
+
+# dist
+/dist
+
+# typedoc
+/apidoc
