@@ -68,4 +68,10 @@ export interface ISettings {
     
         // Enables the Test Mode (lowers difficulty)
         TestNetworkEnabled: number;
+
+        // Tor.real pid
+        TorPID: number;
+
+        //Onion address
+        OnionAddress: string;
 }

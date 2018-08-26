@@ -86,7 +86,13 @@ let defaultSettings = {
     ControlSock: join(KADENCE_DEFAULT_DIR, 'kadence.sock'),
 
     // Enables the Test Mode (lowers difficulty)
-    TestNetworkEnabled: '0'
+    TestNetworkEnabled: '0',
+
+    // Tor.real pid
+    TorPID: '0',
+
+    //Onion address
+    OnionAddress: ''
 }
 
 @Injectable()
@@ -133,7 +139,9 @@ export class Settings implements ISettings {
     ControlSockEnabled: number;
     ControlSock: string;
     TestNetworkEnabled: number;
-
+    TorPID: number;
+    OnionAddress: string;
+    
     logger_: bunyan;
 
     constructor() {
