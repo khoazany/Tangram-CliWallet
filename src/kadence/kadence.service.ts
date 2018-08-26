@@ -4,7 +4,6 @@ import { MessageEntity } from '../common/database/entities/message.entity';
 import { Topic } from '../common/enums/topic.enum';
 import { SeedService } from './seed.service';
 import { QuasarService } from './quasar.service';
-import { join } from 'path';
 import { existsSync, writeFileSync, readFileSync } from 'fs';
 import * as kadence from '@kadenceproject/kadence';
 import * as level from 'level';
