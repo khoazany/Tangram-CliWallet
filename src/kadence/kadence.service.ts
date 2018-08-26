@@ -27,6 +27,24 @@ export class Kadence {
         this.self_signed_certificate();
     }
 
+    async send(topic: Topic, messageEntity: MessageEntity) {
+        const self = this;
+        for (const member of messageEntity.optional.members) {
+            this.node_.send(
+                topic, [messageEntity.stringify()],
+                [
+                    member['key'], {
+                        hostname: member['hostname'],
+                        port: member['port']
+                    }
+                ],
+                (err, result) => {
+                    if (err) self.logger_.error(err);
+                }
+            );
+        }
+    }
+
     private create_logger() {
         this.logger_ = bunyan.createLogger({
             name: 'kadence',
@@ -91,52 +109,35 @@ export class Kadence {
             contact: { hostname: this.settingsService.NodePublicAddress, port: this.settingsService.NodePublicPort }
         });
 
-        this.node_.hashcash = this.node_.plugin(kadence.hashcash({
-            methods: [
-                Topic.EJECT,
-                Topic.EVENT,
-                Topic.LOCKSTEP,
-                Topic.PUBLISH,
-                Topic.QUERY,
-                Topic.SEED,
-                Topic.SUBSCRIBE
-            ],
-            difficulty: 8
-        }));
+        this.add_plugins();
+        this.bandwidth_enabled();
+        this.onion_enabled();
+        this.nat_enabled();
+        this.routing();
 
-        this.node_.quasar = this.node_.plugin(kadence.quasar());
-        this.node_.eclipse = this.node_.plugin(kadence.eclipse());
-        this.node_.spartacus = this.node_.plugin(kadence.spartacus());
-        this.node_.permission = this.node_.plugin(kadence.permission({
-            privateKey: this.node_.spartacus.privateKey,
-            walletPath: this.settingsService.EmbeddedWalletDirectory
-        }));
+        this.node_.on('error', (err) => {
+            this.logger_.error(err.message.toLowerCase());
+        });
 
-        if (!!parseInt(this.settingsService.BandwidthAccountingEnabled.toString())) {
-            this.node_.hibernate = this.node_.plugin(kadence.hibernate({
-                limit: this.settingsService.BandwidthAccountingMax,
-                interval: this.settingsService.BandwidthAccountingReset,
-                reject: ['FIND_VALUE', 'STORE']
-            }));
+        this.verbose_enabled();
+
+        this.node_.listen(this.settingsService.NodeListenPort, () => {
+            this.logger_.info(`Kadence listening on port: ${this.node_.contact.port} hostname: ${this.node_.contact.hostname}`);
+            this.logger_.info(`Kadence identity: ${this.node_.identity.toString('hex')}`);
+            this.settingsService.Identity = this.node_.identity.toString('hex');
+            this.settingsService.OnionAddress = this.node_.contact.hostname;
+            this.settingsService.TorPID = this.node_.onion.tor.process.pid;
+        });
+    }
+
+    private verbose_enabled() {
+        if (!!parseInt(this.settingsService.VerboseLoggingEnabled.toString())) {
+            this.node_.rpc.deserializer.append(new kadence.logger.IncomingMessage(this.logger_));
+            this.node_.rpc.serializer.prepend(new kadence.logger.OutgoingMessage(this.logger_));
         }
+    }
 
-        if (!!parseInt(this.settingsService.OnionEnabled.toString())) {
-            kadence.constants.T_RESPONSETIMEOUT = 20000;
-            this.node_.onion = this.node_.plugin(kadence.onion({
-                dataDirectory: this.settingsService.OnionHiddenServiceDirectory,
-                virtualPort: parseInt(this.settingsService.OnionVirtualPort.toString()),
-                localMapping: `127.0.0.1:${parseInt(this.settingsService.NodeListenPort.toString())}`,
-                torrcEntries: {
-                    CircuitBuildTimeout: 10,
-                    KeepalivePeriod: 60,
-                    NewCircuitPeriod: 60,
-                    NumEntryGuards: 8,
-                    Log: `${this.settingsService.OnionLoggingVerbosity} stdout`
-                },
-                passthroughLoggingEnabled: !!parseInt(this.settingsService.OnionLoggingEnabled.toString())
-            }));
-        }
-
+    private nat_enabled() {
         if (!!parseInt(this.settingsService.TraverseNatEnabled.toString())) {
             this.node_.traverse = this.node_.plugin(kadence.traverse([
                 new kadence.traverse.UPNPStrategy({
@@ -156,43 +157,57 @@ export class Kadence {
                 })
             ]));
         }
-
-        this.routing();
-
-        this.node_.on('error', (err) => {
-            this.logger_.error(err.message.toLowerCase());
-        });
-
-        if (!!parseInt(this.settingsService.VerboseLoggingEnabled.toString())) {
-            this.node_.rpc.deserializer.append(new kadence.logger.IncomingMessage(this.logger_));
-            this.node_.rpc.serializer.prepend(new kadence.logger.OutgoingMessage(this.logger_));
-        }
-
-        this.node_.listen(this.settingsService.NodeListenPort, () => {
-            this.logger_.info(`Kadence listening on port: ${this.node_.contact.port} hostname: ${this.node_.contact.hostname}`);
-            this.logger_.info(`Kadence identity: ${this.node_.identity.toString('hex')}`);
-            this.settingsService.Identity = this.node_.identity.toString('hex');
-            this.settingsService.OnionAddress = this.node_.contact.hostname;
-            this.settingsService.TorPID = this.node_.onion.tor.process.pid;
-        });
     }
 
-    async send(topic: Topic, messageEntity: MessageEntity) {
-        const self = this;
-        for (const member of messageEntity.optional.members) {
-            this.node_.send(
-                topic, [messageEntity.stringify()],
-                [
-                    member['key'], {
-                        hostname: member['hostname'],
-                        port: member['port']
-                    }
-                ],
-                (err, result) => {
-                    if (err) self.logger_.error(err);
-                }
-            );
+    private bandwidth_enabled() {
+        if (!!parseInt(this.settingsService.BandwidthAccountingEnabled.toString())) {
+            this.node_.hibernate = this.node_.plugin(kadence.hibernate({
+                limit: this.settingsService.BandwidthAccountingMax,
+                interval: this.settingsService.BandwidthAccountingReset,
+                reject: ['FIND_VALUE', 'STORE']
+            }));
         }
+    }
+
+    private onion_enabled() {
+        if (!!parseInt(this.settingsService.OnionEnabled.toString())) {
+            kadence.constants.T_RESPONSETIMEOUT = 20000;
+            this.node_.onion = this.node_.plugin(kadence.onion({
+                dataDirectory: this.settingsService.OnionHiddenServiceDirectory,
+                virtualPort: parseInt(this.settingsService.OnionVirtualPort.toString()),
+                localMapping: `127.0.0.1:${parseInt(this.settingsService.NodeListenPort.toString())}`,
+                torrcEntries: {
+                    CircuitBuildTimeout: 10,
+                    KeepalivePeriod: 60,
+                    NewCircuitPeriod: 60,
+                    NumEntryGuards: 8,
+                    Log: `${this.settingsService.OnionLoggingVerbosity} stdout`
+                },
+                passthroughLoggingEnabled: !!parseInt(this.settingsService.OnionLoggingEnabled.toString())
+            }));
+        }
+    }
+
+    private add_plugins() {
+        this.node_.hashcash = this.node_.plugin(kadence.hashcash({
+            methods: [
+                Topic.EJECT,
+                Topic.EVENT,
+                Topic.LOCKSTEP,
+                Topic.PUBLISH,
+                Topic.QUERY,
+                Topic.SEED,
+                Topic.SUBSCRIBE
+            ],
+            difficulty: 8
+        }));
+        this.node_.quasar = this.node_.plugin(kadence.quasar());
+        this.node_.eclipse = this.node_.plugin(kadence.eclipse());
+        this.node_.spartacus = this.node_.plugin(kadence.spartacus());
+        this.node_.permission = this.node_.plugin(kadence.permission({
+            privateKey: this.node_.spartacus.privateKey,
+            walletPath: this.settingsService.EmbeddedWalletDirectory
+        }));
     }
 
     private routing() {
