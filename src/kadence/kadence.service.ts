@@ -45,10 +45,44 @@ export class Kadence {
         });
     }
 
+    private process_events() {
+        const self = this;
+        try {
+            npid.create(this.settingsService.DaemonPidFilePath).removeOnExit();
+        } catch (err) {
+            self.logger_.error('Failed to create PID file, is kadence already running?');
+            process.exit(1);
+        }
+        // Shutdown children cleanly on exit
+        process.on('exit', (code) => {
+            self.killChildrenAndExit(self);
+        });
+        process.on('SIGTERM', () => {
+            self.killChildrenAndExit(self);
+        });
+        process.on('SIGINT', () => {
+            self.killChildrenAndExit(self);
+        });
+        process.on('uncaughtException', (err) => {
+            npid.remove(this.settingsService.DaemonPidFilePath);
+            self.logger_.error(err.message);
+            self.logger_.debug(err.stack);
+            process.exit(1);
+        });
+        process.on('unhandledRejection', (err) => {
+            npid.remove(this.settingsService.DaemonPidFilePath);
+            self.logger_.error(err.message);
+            self.logger_.debug(err.stack);
+            process.exit(1);
+        });
+    }
+
     private async start_up() {
         const key = readFileSync(this.settingsService.SSLKeyPath);
         const cert = readFileSync(this.settingsService.SSLCertificatePath);
         const transport = new kadence.HTTPSTransport({ key, cert, ca: [] });
+
+        this.process_events();
 
         this.node_ = new kadence.KademliaNode({
             identity: kadence.utils.getRandomKeyBuffer(), // Buffer.from(this.settingsService.Identity, 'hex'),
@@ -137,9 +171,9 @@ export class Kadence {
         this.node_.listen(this.settingsService.NodeListenPort, () => {
             this.logger_.info(`Kadence listening on port: ${this.node_.contact.port} hostname: ${this.node_.contact.hostname}`);
             this.logger_.info(`Kadence identity: ${this.node_.identity.toString('hex')}`);
-            this.logger_.info(`Kadence connected to ${this.node_.router.length} peers!`);
-
             this.settingsService.Identity = this.node_.identity.toString('hex');
+            this.settingsService.OnionAddress = this.node_.contact.hostname;
+            this.settingsService.TorPID = this.node_.onion.tor.process.pid;
         });
     }
 
@@ -199,5 +233,13 @@ export class Kadence {
             self.logger_.info('Kadence certificate found!');
             self.start_up();
         }
+    }
+
+    private killChildrenAndExit(kad: Kadence) {
+        kad.logger_.info('exiting, killing child services, cleaning up');
+        npid.remove(kad.settingsService.DaemonPidFilePath);
+        process.removeListener('exit', kad.killChildrenAndExit);
+        process.kill(parseInt(kad.settingsService.TorPID.toString()));
+        process.exit(0);
     }
 }
