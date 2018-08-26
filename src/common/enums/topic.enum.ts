@@ -1,6 +1,10 @@
 export enum Topic {
+    ADDRESS = 'ADDRESS',
     BALANCE = 'BALANCE',
+    BLOCKS = 'BLOCKS',
+    CREATE = 'CREATE_WALLET',
     TRANSFER = 'TRANSFER',
+    WALLET = 'WALLET',
     REWARD = 'REWARD',
     EJECT = 'EJECT',
     EVENT = 'EVENT',
@@ -8,5 +12,7 @@ export enum Topic {
     QUERY = 'QUERY',
     SEED = 'SEED',
     PUBLISH = 'PUBLISH',
-    SUBSCRIBE = 'SUBSCRIBE'
+    SUBSCRIBE = 'SUBSCRIBE',
+    SHARE = 'SECRET_SHARE',
+    RECOVER = 'SECRET_RECOVER'
 }
