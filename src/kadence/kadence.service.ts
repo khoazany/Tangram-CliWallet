@@ -28,20 +28,26 @@ export class Kadence {
 
     async send(topic: Topic, messageEntity: MessageEntity) {
         const self = this;
-        for (const member of messageEntity.optional.members) {
-            this.node_.send(
-                topic, [messageEntity.stringify()],
-                [
-                    member['key'], {
-                        hostname: member['hostname'],
-                        port: member['port']
+        return new Promise((resolve, reject) => {
+            for (const member of messageEntity.optional.members) {
+                this.node_.send(
+                    topic, [messageEntity.stringify()],
+                    [
+                        member['key'], {
+                            hostname: member['hostname'],
+                            port: member['port']
+                        }
+                    ],
+                    (err, result) => {
+                        if (err) {
+                            self.logger_.error(err);
+                            reject(err);
+                        }
+                        resolve(result);
                     }
-                ],
-                (err, result) => {
-                    if (err) self.logger_.error(err);
-                }
-            );
-        }
+                );
+            }
+        });
     }
 
     private create_logger() {
