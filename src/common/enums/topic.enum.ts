@@ -11,6 +11,7 @@ export enum Topic {
     LOCKSTEP = 'LOCKSTEP',
     QUERY = 'QUERY',
     SEED = 'SEED',
+    MESSAGE = 'MESSAGE',
     PUBLISH = 'PUBLISH',
     SUBSCRIBE = 'SUBSCRIBE',
     SHARE = 'SECRET_SHARE',
