@@ -3,7 +3,7 @@ import { join } from 'path';
 import { ISettings } from "./settings.interface";
 import { existsSync, writeFileSync, readFileSync } from 'fs';
 import { homedir } from 'os';
-import R from 'ramda';
+import * as R from 'ramda';
 import * as kadence from '@kadenceproject/kadence';
 import * as ini from 'ini';
 import * as mkdirp from 'mkdirp';
@@ -92,7 +92,12 @@ let defaultSettings = {
     TorPID: '0',
 
     //Onion address
-    OnionAddress: ''
+    OnionAddress: '',
+
+    // Hashicorp Vault
+    ApiVersion: 'v1', // default
+    Endpoint: 'http://127.0.0.1:8200', // default
+    Token: '1234' // optional client token; can be fetched after valid initialization of the server
 }
 
 @Injectable()
@@ -141,6 +146,9 @@ export class Settings implements ISettings {
     TestNetworkEnabled: number;
     TorPID: number;
     OnionAddress: string;
+    ApiVersion: string;
+    Endpoint: string;
+    Token: string;
 
     logger_: bunyan;
 

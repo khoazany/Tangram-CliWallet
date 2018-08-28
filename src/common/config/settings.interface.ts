@@ -74,4 +74,9 @@ export interface ISettings {
 
         //Onion address
         OnionAddress: string;
+
+        // Hashicorp Vault
+        ApiVersion: string;
+        Endpoint: string;
+        Token: string;
 }
