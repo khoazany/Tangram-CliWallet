@@ -1,6 +1,5 @@
 import { Injectable } from "@nestjs/common";
 import { Settings } from "../config/settings.service";
-import * as lmdb from 'node-lmdb';
 import _ from 'underscore';
 import { BlockEntity, Blocks } from "./entities/block.entity";
 import { statSync } from "fs";
