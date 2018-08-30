@@ -97,7 +97,11 @@ let defaultSettings = {
     // Hashicorp Vault
     ApiVersion: 'v1', // default
     Endpoint: 'http://127.0.0.1:8200', // default
-    Token: '1234' // optional client token; can be fetched after valid initialization of the server
+    Token: '1234', // optional client token; can be fetched after valid initialization of the server
+
+    // Swagger API
+    SwaggerEndpoint: 'http://127.0.0.1:8081',
+    SwaggerApiKey: ''
 }
 
 @Injectable()
@@ -149,6 +153,8 @@ export class Settings implements ISettings {
     ApiVersion: string;
     Endpoint: string;
     Token: string;
+    SwaggerEndpoint: string;
+    SwaggerApiKey: string;
 
     logger_: bunyan;
 

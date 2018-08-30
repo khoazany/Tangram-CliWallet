@@ -79,4 +79,8 @@ export interface ISettings {
         ApiVersion: string;
         Endpoint: string;
         Token: string;
+
+        // Swagger API
+        SwaggerEndpoint: string;
+        SwaggerApiKey: string;
 }
