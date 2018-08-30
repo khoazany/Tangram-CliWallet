@@ -7,6 +7,7 @@ import { EjectService } from './kadence/eject.service';
 import { QuasarService } from './kadence/quasar.service';
 import { Kadence } from './kadence/kadence.service';
 import { SodiumService } from './common/sodium/sodium.service';
+import { CommandService } from './commands/command.service'
 
 @Module({
   providers: [
@@ -17,7 +18,8 @@ import { SodiumService } from './common/sodium/sodium.service';
     LockstepService,
     SeedService,
     Vault,
-    QuasarService
+    QuasarService,
+    CommandService
   ],
 })
 
