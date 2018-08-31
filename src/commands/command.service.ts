@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import Vorpal = require('vorpal');
 import { ICommand } from './command.interface';
-import { SetAPIKeyReceiver, SetAPIKeyCommand } from './setapikey.command';
 
 @Injectable()
 export class CommandService {

@@ -4,14 +4,16 @@ import { Settings } from './common/config/settings.service';
 import { CommandService } from './commands/command.service';
 import { INestApplicationContext } from '@nestjs/common';
 
-import { SetAPIKeyCommand, SetAPIKeyReceiver } from './commands/setapikey.command';
+import { SetNodeEndpointCommand, SetNodeEndpointReceiver } from './commands/setnodeendpoint.command';
+import { CreateWalletCommand, CreateWalletReceiver } from './commands/actor/createwallet.command';
 
 async function registerCommands(app) {
   const commandService = await app.get(CommandService);
 
   let settings = await app.get(Settings);
 
-  commandService.register(new SetAPIKeyCommand(new SetAPIKeyReceiver(settings)));
+  commandService.register(new SetNodeEndpointCommand(new SetNodeEndpointReceiver(settings)));
+  commandService.register(new CreateWalletCommand(new CreateWalletReceiver(settings)));
 }
 
 async function bootstrap() {

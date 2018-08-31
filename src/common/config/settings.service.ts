@@ -12,6 +12,7 @@ import * as RotatingLogStream from 'bunyan-rotating-file-stream';
 
 const KADENCE_DEFAULT_DIR = join(homedir(), '.kadencecli');
 const TANGRAM_DEFAULT_DIR = join(homedir(), '.tangramcli');
+const HIDDEN_SERVICE_DIR = join(KADENCE_DEFAULT_DIR, 'kadence.onion/hidden_service');
 
 let defaultSettings = {
     // Applications
@@ -46,9 +47,10 @@ let defaultSettings = {
     // Onion Plugin
     OnionEnabled: '1',
     OnionVirtualPort: '443',
-    OnionHiddenServiceDirectory: join(KADENCE_DEFAULT_DIR, 'kadence.onion/hidden_service'),
+    OnionHiddenServiceDirectory: HIDDEN_SERVICE_DIR,
     OnionLoggingVerbosity: 'notice',
     OnionLoggingEnabled: '0',
+    OnionSocksPort: '9050',
 
     // Bandwidth Metering
     BandwidthAccountingEnabled: '0',
@@ -83,7 +85,7 @@ let defaultSettings = {
     ControlPortEnabled: '0',
     ControlPort: '5275',
     ControlSockEnabled: '1',
-    ControlSock: join(KADENCE_DEFAULT_DIR, 'kadence.sock'),
+    ControlSock: join(HIDDEN_SERVICE_DIR, 'control-port'),
 
     // Enables the Test Mode (lowers difficulty)
     TestNetworkEnabled: '0',
@@ -128,6 +130,7 @@ export class Settings implements ISettings {
     OnionHiddenServiceDirectory: string;
     OnionLoggingVerbosity: string;
     OnionLoggingEnabled: number;
+    OnionSocksPort: string;
     BandwidthAccountingEnabled: number;
     BandwidthAccountingMax: string;
     BandwidthAccountingReset: string;

@@ -186,6 +186,7 @@ export class Kadence {
                     KeepalivePeriod: 60,
                     NewCircuitPeriod: 60,
                     NumEntryGuards: 8,
+                    SocksPort: this.settingsService.OnionSocksPort,
                     Log: `${this.settingsService.OnionLoggingVerbosity} stdout`
                 },
                 passthroughLoggingEnabled: !!parseInt(this.settingsService.OnionLoggingEnabled.toString())

@@ -34,7 +34,8 @@ export interface ISettings {
         OnionHiddenServiceDirectory: string;
         OnionLoggingVerbosity: string;
         OnionLoggingEnabled: number;
-    
+        OnionSocksPort: string;
+
         // Bandwidth Metering
         BandwidthAccountingEnabled: number;
         BandwidthAccountingMax: string;
