@@ -50,8 +50,9 @@ let defaultSettings = {
     OnionHiddenServiceDirectory: HIDDEN_SERVICE_DIR,
     OnionLoggingVerbosity: 'notice',
     OnionLoggingEnabled: '0',
+    OnionSocksHost: '127.0.0.1',
     OnionSocksPort: '9050',
-
+    
     // Bandwidth Metering
     BandwidthAccountingEnabled: '0',
     BandwidthAccountingMax: '5GB',
@@ -130,6 +131,7 @@ export class Settings implements ISettings {
     OnionHiddenServiceDirectory: string;
     OnionLoggingVerbosity: string;
     OnionLoggingEnabled: number;
+    OnionSocksHost: string;
     OnionSocksPort: string;
     BandwidthAccountingEnabled: number;
     BandwidthAccountingMax: string;
