@@ -4,6 +4,7 @@ import { Settings } from "common/config/settings.service";
 import request = require('request');
 
 import Agent = require('socks5-http-client/lib/Agent');
+import { API } from "../../common/utils/api";
 
 export class WalletTransferFundsCommand extends Command {
     public register(vorpal: any): void {
@@ -20,8 +21,8 @@ export class WalletTransferFundsReceiver implements IReceiver {
     }
 
     execute(context: any, args: any, callback: any): void {
-        request.post({
-            url: `${this._settings.SwaggerEndpoint}actor/wallet/transfer/funds`,
+        API.post({
+            uri: '/actor/wallet/transfer/funds',
             json: {
                 identifier: args.identifier,
                 password: args.password,
@@ -30,16 +31,9 @@ export class WalletTransferFundsReceiver implements IReceiver {
                 link: args.change,
                 amount: args.amount
             },
-            headers: {
-                "Authorization": `${this._settings.SwaggerApiKey}`,
-                "Content-Type": "application/json"
-            },
-            agentClass: Agent,
-            agentOptions: {
-                socksHost: '127.0.0.1',
-                socksPort: this._settings.OnionSocksPort
-            }
-        }, function (err, res) {
+        }, 
+        this._settings, 
+        function (err, res) {
             if (err) {
                 context.log(err.body);
             }

@@ -4,6 +4,7 @@ import { Settings } from "common/config/settings.service";
 import request = require('request');
 
 import Agent = require('socks5-http-client/lib/Agent');
+import { API } from "../../common/utils/api";
 
 export class WalletCreateCommand extends Command {
     public register(vorpal: any): void {
@@ -20,21 +21,14 @@ export class WalletCreateReceiver implements IReceiver {
     }
 
     execute(context: any, args: any, callback: any): void {
-        request.post({
-            url: `${this._settings.SwaggerEndpoint}actor/wallet/create`,
+        API.post({
+            uri: '/actor/wallet/create',
             json: {
                 password: args.password
-            },
-            headers: {
-                "Authorization": `${this._settings.SwaggerApiKey}`,
-                "Content-Type": "application/json"
-            },
-            agentClass: Agent,
-            agentOptions: {
-                socksHost: this._settings.OnionSocksHost,
-                socksPort: this._settings.OnionSocksPort
             }
-        }, function (err, res) {
+        }, 
+        this._settings, 
+        function (err, res) {
             if (err) {
                 context.log(err.body);
             }

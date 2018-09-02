@@ -16,7 +16,7 @@ export class SetNodeEndpointReceiver implements IReceiver {
     }
     
     execute(context: any, args: any, callback: any): void {
-        this._settings.SwaggerEndpoint = args.endpoint;
+        this._settings.SwaggerEndpoint = args.endpoint.replace(/\/+$/, "");;
         this._settings.SwaggerApiKey = args.token;
 
         callback();
