@@ -10,9 +10,11 @@ import { WalletBalanceReceiver, WalletBalanceCommand } from './wallet/balance.co
 import { WalletBlocksCommand, WalletBlocksReceiver } from './wallet/blocks.command';
 import { WalletCommand, WalletReceiver } from './wallet/wallet.command';
 
+import { VaultDownloadCommand, VaultDownloadReceiver } from './wallet/vault.download.command';
+import { VaultInstallCommand, VaultInstallReceiver } from './wallet/vault.install.command';
+
 export class Commands {
-    public static async registerCommands(app)
-    {
+    public static async registerCommands(app) {
         const commandService = await app.get(CommandService);
         let settings = await app.get(Settings);
 
@@ -27,5 +29,9 @@ export class Commands {
         commandService.register(new WalletBalanceCommand(new WalletBalanceReceiver(settings)));
         commandService.register(new WalletBlocksCommand(new WalletBlocksReceiver(settings)));
         commandService.register(new WalletCommand(new WalletReceiver(settings)));
+
+        //  Vault
+        commandService.register(new VaultDownloadCommand(new VaultDownloadReceiver(settings)));
+        commandService.register(new VaultInstallCommand(new VaultInstallReceiver(settings)));
     }
 }

@@ -2,7 +2,9 @@
 import childProcess = require('child_process');
 import path = require('path');
 import os = require('os');
-const BIN_DIR = path.join(__dirname, '../bin');
+import fs = require('fs');
+
+import dl = require('download');
 
 export function getVaultLink(platform, version, callback) {
     function createHref(v) {
@@ -29,8 +31,8 @@ export function getVaultLink(platform, version, callback) {
 
         return `${link}/vault_${v}_${plat}_${arch}.zip`
     }
-    
-    if(version) {
+
+    if (version) {
         callback(null, createHref(version));
     } else {
         //  TODO: Download the latest version.
@@ -38,16 +40,14 @@ export function getVaultLink(platform, version, callback) {
     }
 }
 
-export function install(callback) {
-    let basename = null;
+export function download(download_dir, callback) {
+    getVaultLink(os.platform(), '0.11.0', function (err, res) {
+        if (err) {
+            return callback(err);
+        }
 
-
+        dl(res, download_dir, { extract: true }).then(() => {
+            callback();
+        });
+    });
 }
-
-
-/* export function unpackZipWindows(bundle, callback) {
-    const extract = childProcess.spawn(_7z, [
-        'x',
-        path.join(BIN_DIR, '.tbb.exe')
-    ], { cwd: BIN_DIR });
-} */
