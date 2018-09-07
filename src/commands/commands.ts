@@ -12,17 +12,19 @@ import { WalletCommand, WalletReceiver } from './wallet/wallet.command';
 
 import { VaultDownloadCommand, VaultDownloadReceiver } from './wallet/vault.download.command';
 import { VaultInstallCommand, VaultInstallReceiver } from './wallet/vault.install.command';
+import { ModuleRef } from '@nestjs/core';
 
 export class Commands {
     public static async registerCommands(app) {
         const commandService = await app.get(CommandService);
+        const moduleRef = await app.get(ModuleRef);
         let settings = await app.get(Settings);
 
         //  Settings
-        commandService.register(new SetNodeEndpointCommand(new SetNodeEndpointReceiver(settings)));
+        commandService.register(new SetNodeEndpointCommand(new SetNodeEndpointReceiver(settings, moduleRef)));
 
         //  Wallet
-        commandService.register(new WalletCreateCommand(new WalletCreateReceiver(settings)));
+        commandService.register(new WalletCreateCommand(new WalletCreateReceiver(settings, moduleRef)));
         commandService.register(new WalletAddressCommand(new WalletAddressReceiver(settings)));
         commandService.register(new WalletRewardCommand(new WalletRewardReceiver(settings)));
         commandService.register(new WalletTransferFundsCommand(new WalletTransferFundsReceiver(settings)));

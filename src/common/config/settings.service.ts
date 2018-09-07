@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { join } from 'path';
 import { ISettings } from "./settings.interface";
 import { existsSync, writeFileSync, readFileSync } from 'fs';
-import { homedir } from 'os';
+import { homedir, hostname } from 'os';
 import * as R from 'ramda';
 import * as kadence from '@kadenceproject/kadence';
 import * as ini from 'ini';
@@ -104,7 +104,12 @@ let defaultSettings = {
 
     // Swagger API
     SwaggerEndpoint: 'http://127.0.0.1:8081',
-    SwaggerApiKey: ''
+    SwaggerApiKey: '',
+
+    // Kadence contact
+    Hostname: '',
+    HostPort: '',
+    HostIdentity: ''
 }
 
 @Injectable()
@@ -160,7 +165,10 @@ export class Settings implements ISettings {
     Token: string;
     SwaggerEndpoint: string;
     SwaggerApiKey: string;
-
+    Hostname: string;
+    HostPort: string;
+    HostIdentity: string;
+    
     logger_: bunyan;
 
     constructor() {

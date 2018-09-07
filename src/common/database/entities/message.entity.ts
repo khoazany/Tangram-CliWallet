@@ -1,9 +1,11 @@
 import R from 'ramda';
 import * as sodium from 'libsodium-wrappers';
 import { MemberEntity } from './member.entity';
+import { Topic } from '../../enums/topic.enum';
 
 export interface IMessageEntityOptional {
     members?: Array<MemberEntity>;
+    topic?: Topic;
 }
 
 export class MessageEntity {

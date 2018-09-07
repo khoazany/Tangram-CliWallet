@@ -197,13 +197,15 @@ export class Kadence {
     private add_plugins() {
         this.node_.hashcash = this.node_.plugin(kadence.hashcash({
             methods: [
-                Topic.EJECT,
-                Topic.EVENT,
                 Topic.LOCKSTEP,
                 Topic.PUBLISH,
                 Topic.QUERY,
                 Topic.SEED,
-                Topic.SUBSCRIBE
+                Topic.SUBSCRIBE,
+                Topic.WALLET,
+                Topic.BALANCE,
+                Topic.REWARD,
+                Topic.TRANSFER
             ],
             difficulty: 8
         }));
@@ -217,15 +219,15 @@ export class Kadence {
     }
 
     private routing() {
-        this.node_.use((err, request, response, next) => {
-            response.send({ error: err.message });
+        this.node_.use((request, response, next) => {
+            let [identityString] = request.contact;
+
+            next();
         });
 
         this.node_.use(Topic.SEED, this.seedService.handler);
 
         this.node_.quasarSubscribe([
-            Topic.EJECT,
-            Topic.EVENT,
             Topic.LOCKSTEP,
             Topic.QUERY
         ], this.quasarService.handler);
