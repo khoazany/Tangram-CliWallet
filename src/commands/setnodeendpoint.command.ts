@@ -4,12 +4,12 @@ import { ModuleRef } from "@nestjs/core";
 import { Kadence } from "../kadence/kadence.service";
 import { MessageEntity } from "../common/database/entities/message.entity";
 import { Topic } from "../common/enums/topic.enum";
+import { MemberEntity } from "common/database/entities/member.entity";
 
 export class SetNodeEndpointCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
         vorpal.command('setnodeendpoint <identity> <endpoint> <port>', 'Set Kadence contact Endpoint')
-            .option('-r, --reconnect, -cls, --clear')
             .action(function (args, cb) {
                 self.execute(this, args, cb);
             });
@@ -31,11 +31,11 @@ export class SetNodeEndpointReceiver implements IReceiver {
         this._settings.Hostname = args.endpoint;
         this._settings.HostPort = args.port
 
-        const messageEntity = new MessageEntity().add(this._settings.Identity, {
-            identity: this._settings.HostIdentity,
-            hostname: this._settings.HostIdentity,
-            port: this._settings.HostPort
-        }, undefined);
+        const messageEntity = new MessageEntity().add(this._settings.Identity, {}, {
+            members: [
+                new MemberEntity().add(args.endpoint, args.port, args.identity)
+            ]
+        });
 
         const result = await this.kadence_.send(Topic.JOIN, messageEntity);
 
