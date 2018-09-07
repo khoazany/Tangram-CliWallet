@@ -1,26 +1,16 @@
-//import _7z = require('7zip')['7z'];
-import childProcess = require('child_process');
-import path = require('path');
-import os = require('os');
-import fs = require('fs');
-
-import dl = require('download');
-
-import { spawn, ChildProcess } from 'child_process'
-import { join } from 'path';
-import { homedir } from 'os';
-
-const TANGRAM_DEFAULT_DIR = join(homedir(), '.tangramcli');
-
-export function getVaultLink(platform, version, callback) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const os = require("os");
+const fs = require("fs");
+const dl = require("download");
+const path_1 = require("path");
+const os_1 = require("os");
+const TANGRAM_DEFAULT_DIR = path_1.join(os_1.homedir(), '.tangramcli');
+function getVaultLink(platform, version, callback) {
     function createHref(v) {
-        const link = `https://releases.hashicorp.com/vault/${v}`
-
-        //  TODO: Other archs?
+        const link = `https://releases.hashicorp.com/vault/${v}`;
         const arch = os.arch() === 'x64' ? 'amd64' : '386';
-
         let plat = 'unsupported';
-
         switch (platform) {
             case 'win32':
                 plat = 'windows';
@@ -32,37 +22,34 @@ export function getVaultLink(platform, version, callback) {
                 plat = platform;
                 break;
             default:
-                throw new Error(`Unsupported platform "${platform}"`)
+                throw new Error(`Unsupported platform "${platform}"`);
         }
-
-        return `${link}/vault_${v}_${plat}_${arch}.zip`
+        return `${link}/vault_${v}_${plat}_${arch}.zip`;
     }
-
     if (version) {
         callback(null, createHref(version));
-    } else {
-        //  TODO: Download the latest version.
+    }
+    else {
         throw new Error(`Vault version not specified.`);
     }
 }
-
-export function download(callback) {
+exports.getVaultLink = getVaultLink;
+function download(callback) {
     getVaultLink(os.platform(), '0.11.0', function (err, res) {
         if (err) {
             return callback(err);
         }
-
         dl(res, TANGRAM_DEFAULT_DIR, { extract: true }).then(() => {
             callback();
         });
     });
 }
-
-export function write_default_config() {
+exports.download = download;
+function write_default_config() {
     let vault_config = {
         "storage": {
             "file": {
-                "path": join(TANGRAM_DEFAULT_DIR, 'wallet')
+                "path": path_1.join(TANGRAM_DEFAULT_DIR, 'wallet')
             }
         },
         "listener": {
@@ -71,22 +58,21 @@ export function write_default_config() {
                 "tls_disable": "true"
             }
         }
-    }
-
-    fs.writeFileSync(join(TANGRAM_DEFAULT_DIR, 'vault.json'), JSON.stringify(vault_config, null, 2));
+    };
+    fs.writeFileSync(path_1.join(TANGRAM_DEFAULT_DIR, 'vault.json'), JSON.stringify(vault_config, null, 2));
 }
-
+exports.write_default_config = write_default_config;
 if (!module.parent) {
     exports.download((err) => {
         if (err) {
             console.log(err.message);
             process.exit(1);
-        } else {
-            console.log('Vault download finished!')
-
+        }
+        else {
+            console.log('Vault download finished!');
             exports.write_default_config();
-
             process.exit(0);
         }
     });
 }
+//# sourceMappingURL=download.vault.js.map

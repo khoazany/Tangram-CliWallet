@@ -12,6 +12,8 @@ import * as RotatingLogStream from 'bunyan-rotating-file-stream';
 import * as pem from 'pem';
 import * as npid from 'npid';
 
+import * as isrunning from 'is-running'
+
 @Injectable()
 export class Kadence {
     private node_: kadence.KademliaNode;
@@ -70,7 +72,19 @@ export class Kadence {
 
     private process_events() {
         const self = this;
+        
         try {
+            //  If the file exists, check if a process with that
+            //  PID exists, if not remove it and continue.
+            if (existsSync(this.settingsService.DaemonPidFilePath)) {
+                let pid = parseInt(readFileSync(this.settingsService.DaemonPidFilePath, "utf-8"));
+
+                if (!isrunning(pid)) {
+                    self.logger_.warn(`Found existing PID file. However, no process with that ID was found... cleaning up before continuing.`);
+                    npid.remove(this.settingsService.DaemonPidFilePath);
+                }
+            }
+
             npid.create(this.settingsService.DaemonPidFilePath).removeOnExit();
         } catch (err) {
             self.logger_.error('Failed to create PID file, is kadence already running?');

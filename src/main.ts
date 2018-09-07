@@ -3,8 +3,6 @@ import { AppModule } from './app.module';
 import { CommandService } from './commands/command.service';
 import { Commands } from './commands/commands'
 
-import { download } from './scripts/download.vault'
-
 import os = require('os');
 
 async function bootstrap() {
