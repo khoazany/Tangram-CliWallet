@@ -26,7 +26,7 @@ export class VaultDownloadReceiver implements IReceiver {
     }
 
     execute(context: any, args: any, callback: any): void {
-        download(TANGRAM_DEFAULT_DIR, function(err, res){
+        download(function(err, res){
             if(err) {
                 context.log(err.body)
             }

@@ -29,7 +29,7 @@ export class VaultInstallReceiver implements IReceiver {
         let vault_config = {
             "storage": {
                 "file": {
-                    "path": join(TANGRAM_DEFAULT_DIR, 'wallet')
+                    "path": "wallet"
                 }
             },
             "listener": {
@@ -40,7 +40,7 @@ export class VaultInstallReceiver implements IReceiver {
             }
         }
 
-        fs.writeFile(join(TANGRAM_DEFAULT_DIR, 'vault.json'), JSON.stringify(vault_config), function (err) {
+        fs.writeFile(join(TANGRAM_DEFAULT_DIR, 'vault.json'), JSON.stringify(vault_config, null, 2), function (err) {
             console.log(err);
             callback();
         });
