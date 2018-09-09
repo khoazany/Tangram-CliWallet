@@ -20,6 +20,9 @@ export class Vault {
   private hashiVault_: HashiVault.client;
   private vault_process_: ChildProcess;
 
+  private root_token_: string;
+  private service_token_: string;
+
   constructor(private readonly settings: Settings) {
     this.vault_process_ = spawn('vault', ['server', '-config', 'vault.json'], {
       cwd: TANGRAM_DEFAULT_DIR
@@ -34,106 +37,182 @@ export class Vault {
     this.hashiVault_.endpoint = settings.Endpoint;
     this.hashiVault_.token = settings.Token == '' ? undefined : settings.Token;
 
+
     this.init();
   }
 
   public init() {
+    let key2 = '';
+
     this.hashiVault_.initialized()
       .then((result) => {
-        return this.hashiVault_.init({ secret_shares: NUM_SECRETS, secret_threshold: SECRET_THRESHOLD });
+        if (!result.initialized) {
+          return this.hashiVault_.init({ secret_shares: NUM_SECRETS, secret_threshold: SECRET_THRESHOLD })
+            .then((result) => {
+              this.hashiVault_.token = result.root_token;
+              this.root_token_ = result.root_token;
+
+              const key = result.keys[0];
+
+              console.log()
+              console.log()
+              //  TODO: Make share and threshold configurable.
+              console.log("###########################################################");
+              console.log("#                   !!! ATTENTION !!!                     #");
+              console.log("###########################################################");
+              console.log("    We noticed this is the FIRST time you've started       ");
+              console.log("    the Tangram wallet. Your wallet is encrypted in        ");
+              console.log("    Vault using Shamir's secret sharing algorithm.         ");
+              console.log("    Please store all of the following secrets in a safe    ");
+              console.log("    place. When unsealing the vault you may use any        ");
+              console.log("    1 of these keys. THESE ARE NOT RECOVERY KEYS.          ");
+              console.log();
+              console.log();
+              for (let i = SECRET_THRESHOLD - 1; i < result.keys.length; i++) {
+                console.log(`KEY ${i}: ${result.keys[i]}`)
+              }
+              console.log();
+              console.log();
+              console.log("    You will need to unseal the Vault everytime you launch ");
+              console.log("    the CLI Wallet.                                        ");
+              console.log("    Please type `vault unseal` to unseal the               ");
+              console.log("    Vault.");
+              console.log("###########################################################");
+              console.log("#                   !!! ATTENTION !!!                     #");
+              console.log("###########################################################");
+              console.log()
+              console.log()
+
+              writeFileSync(join(TANGRAM_DEFAULT_DIR, 'shard'), result.keys_base64[0]);
+
+              key2 = result.keys[1];
+
+              return this.hashiVault_.unseal({ secret_shares: 1, key: key });
+            })
+            .then((result => {
+              return this.hashiVault_.unseal({ secret_shares: 1, key: key2 });
+            }))
+            .then((result) => {
+              return this.createVaultServicePolicy();
+            })
+            .then((result) => {
+              return this.createVaultServiceToken().then(
+                (result) => { this.service_token_ = result.auth.client_token }
+              );
+            })
+            .then((result) => {
+              return this.createTemplatedWalletPolicy();
+            })
+            .then((result) => {
+              return this.enableUserpassAuth();
+            })
+            //.then((result) => {
+            //  //  Create bogus user
+            //  return this.createDefaultWalletUser('test', 'test');
+            //})
+            .then((result) => {
+              return this.revokeRootToken();
+            })
+            .catch((err) => {
+              console.error("Vault Error: " + err.message)
+            });;
+        } else {
+          //  TODO: Since the vault is already initialized
+          //        provide the first shard stored on disk.
+          
+          console.log();
+          console.log();
+          console.log("    Please type `vault unseal` to unseal the               ");
+          console.log("    Vault.");
+          console.log();
+          console.log();
+        }
       })
+
+  }
+
+  public enableUserpassAuth() {
+    return this.hashiVault_.auths()
       .then((result) => {
-        this.hashiVault_.token = result.root_token;
-        const key = result.keys[0];
-
-        console.log()
-        console.log()
-        //  TODO: Make share and threshold configurable.
-        console.log("###########################################################");
-        console.log("#                   !!! ATTENTION !!!                     #");
-        console.log("###########################################################");
-        console.log("    We noticed this is the FIRST time you've started       ");
-        console.log("    the Tangram wallet. Your wallet is encrypted in        ");
-        console.log("    Vault using Shamir's secret sharing algorithm.         ");
-        console.log("    Please store all of the following secrets in a safe    ");
-        console.log("    place. When decrypting the vault you may use any       ");
-        console.log("    1 of these keys. THESE ARE NOT RECOVERY KEYS.          ");
-        console.log();
-        for (let i = SECRET_THRESHOLD - 1; i < result.keys.length; i++) {
-          console.log(`KEY ${i}: ${result.keys[i]}`)
-        } 
-        console.log();
-        console.log("###########################################################");
-        console.log("#                   !!! ATTENTION !!!                     #");
-        console.log("###########################################################");
-        console.log()
-        console.log()
-
-        writeFileSync(join(TANGRAM_DEFAULT_DIR, 'shard'), result.keys_base64[0]);
-
-        return this.hashiVault_.unseal({ secret_shares: 1, key });
+        if (result.hasOwnProperty('userpass/')) return undefined;
+        return this.hashiVault_.enableAuth({
+          mount_point: 'userpass',
+          type: 'userpass',
+          description: 'userpass auth',
+        });
       })
-      //.then(console.log)
-      .catch((err) => console.error(err.message));
   }
 
-  public policies() {
-    return new Promise((resolve, reject) => {
-      this.hashiVault_.policies()
-        .then((result) => {
-          console.log(result);
-          return this.hashiVault_.addPolicy({
-            name: 'tangrmpolicy',
-            rules: '{ "path": { "secret/*": { "policy": "write" } } }',
-          });
-        })
-        .then(() => this.hashiVault_.getPolicy({ name: 'tangrmpolicy' }))
-        .then(this.hashiVault_.policies)
-        .then((result) => {
-          console.log(result);
-          return this.hashiVault_.removePolicy({ name: 'tangrmpolicy' });
-        })
-        .catch((err) => console.error(err.message));
-    });
+  public createVaultServicePolicy() {
+    console.log("Creating Vault Service Policy");
+    const name = 'vaultservice';
 
+    const policy = {
+      "path": {
+        "auth/userpass/users/*": {
+          "capabilities": ["create", "list"]
+        },
+        "secret/wallets/*": {
+          "capabilities": ["list"]
+        },
+        "secret/data/wallets/*": {
+          "capabilities": ["list"]
+        },
+      }
+    }
+
+    let policy_string = JSON.stringify(policy, null, 2);
+
+    return this.hashiVault_.policies()
+      .then((result) => {
+        return this.hashiVault_.addPolicy({
+          name: name,
+          rules: policy_string,
+        })
+      });
   }
 
-  public auth() {
+  public createVaultServiceToken() {
+    console.log("Creating Vault Service Token");
+    return this.hashiVault_.tokenCreateOrphan({
+      'policies': ['vaultservice'],
+    })
+  }
+
+  public revokeRootToken() {
+    console.log("Revoking Root Token");
+    return this.hashiVault_.tokenRevoke({ token: this.root_token_ })
+      .then(() => { this.root_token_ = null; });
+  }
+
+  public createTemplatedWalletPolicy() {
+    console.log("Creating Templated Wallet Policy");
+    const name = "walletpolicy";
+
+    const policy = {
+      "path": {
+        "secret/wallets/{{identity.entity.name}}/*": {
+          "capabilities": ["create", "read", "update", "delete", "list"]
+        },
+        "secret/data/wallets/{{identity.entity.name}}/*": {
+          "capabilities": ["create", "read", "update", "delete", "list"]
+        },
+      }
+    }
+
+    return this.hashiVault_.policies()
+      .then((result) => {
+        return this.hashiVault_.addPolicy({
+          name: name,
+          rules: JSON.stringify(policy, null, 2)
+        })
+      });
+  }
+
+  public createWalletUser(username: string, password: string) {
     const mountPoint = 'userpass';
-    const username = 'me';
-    const password = 'foo';
-    return new Promise((resolve, reject) => {
-      this.hashiVault_.auths()
-        .then((result) => {
-          if (result.hasOwnProperty('userpass/')) return undefined;
-          return this.hashiVault_.enableAuth({
-            mount_point: mountPoint,
-            type: 'userpass',
-            description: 'userpass auth',
-          });
-        })
-        .then(() => this.hashiVault_.write(`auth/userpass/users/${username}`, { password, policies: 'root' }))
-        .then(() => this.hashiVault_.userpassLogin({ username, password }))
-        .then(console.log)
-        .catch((err) => console.error(err.message));
-    });
 
-  }
-
-  private token() {
-    return new Promise((resolve, reject) => {
-      this.hashiVault_.tokenCreate()
-        .then((result) => {
-          console.log(result);
-          const newToken = result.auth;
-          return this.hashiVault_.tokenLookup({ token: newToken.client_token })
-            .then(() => this.hashiVault_.tokenLookupAccessor({ accessor: newToken.accessor }));
-        })
-        .then((result) => {
-          console.log(result);
-        })
-        .catch((err) => console.error(err.message));
-    });
-
+    return this.hashiVault_.write(`auth/userpass/users/${username}`, { password, policies: 'walletpolicy' })
+      .catch((err) => console.error(err.message));
   }
 }

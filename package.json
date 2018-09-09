@@ -8,6 +8,7 @@
   },
   "license": "MIT",
   "scripts": {
+    "postinstall": "node script/download.vault.js",
     "format": "prettier --write \"**/*.ts\"",
     "start": "ts-node -r tsconfig-paths/register src/main.ts",
     "start:dev": "nodemon",
@@ -53,7 +54,7 @@
   "contributors": [
     {
       "name": "inkadnb",
-      "url": ""
+      "url": "https://github.com/inkadnb"
     }
   ],
   "devDependencies": {

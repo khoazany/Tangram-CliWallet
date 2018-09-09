@@ -4,7 +4,7 @@ import { ModuleRef } from "@nestjs/core";
 import { Kadence } from "../kadence/kadence.service";
 import { MessageEntity } from "../common/database/entities/message.entity";
 import { Topic } from "../common/enums/topic.enum";
-import { MemberEntity } from "common/database/entities/member.entity";
+import { MemberEntity } from "../common/database/entities/member.entity";
 
 export class SetNodeEndpointCommand extends Command {
     public register(vorpal: any): void {
