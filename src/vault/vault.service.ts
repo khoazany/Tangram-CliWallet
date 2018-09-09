@@ -106,12 +106,12 @@ export class Vault {
             .then((result) => {
               return this.enableUserpassAuth();
             })
-            //.then((result) => {
-            //  //  Create bogus user
-            //  return this.createDefaultWalletUser('test', 'test');
-            //})
             .then((result) => {
               return this.revokeRootToken();
+            })
+            .then((result) => {
+              //  Create bogus user
+              return this.createWalletUser('test', 'test');
             })
             .catch((err) => {
               console.error("Vault Error: " + err.message)
@@ -119,7 +119,7 @@ export class Vault {
         } else {
           //  TODO: Since the vault is already initialized
           //        provide the first shard stored on disk.
-          
+
           console.log();
           console.log();
           console.log("    Please type `vault unseal` to unseal the               ");
@@ -152,16 +152,22 @@ export class Vault {
         "auth/userpass/users/*": {
           "capabilities": ["create", "list"]
         },
+        "identity/*": {
+          "capabilities": ["create", "update"]
+        },
         "secret/wallets/*": {
           "capabilities": ["list"]
         },
         "secret/data/wallets/*": {
           "capabilities": ["list"]
         },
+        "sys/auth": {
+          "capabilities": ["read"]
+        },
       }
     }
 
-    let policy_string = JSON.stringify(policy, null, 2);
+    let policy_string = JSON.stringify(policy);
 
     return this.hashiVault_.policies()
       .then((result) => {
@@ -182,7 +188,10 @@ export class Vault {
   public revokeRootToken() {
     console.log("Revoking Root Token");
     return this.hashiVault_.tokenRevoke({ token: this.root_token_ })
-      .then(() => { this.root_token_ = null; });
+      .then(() => {
+        this.root_token_ = null;
+        this.hashiVault_.token = this.service_token_;
+      });
   }
 
   public createTemplatedWalletPolicy() {
@@ -204,7 +213,7 @@ export class Vault {
       .then((result) => {
         return this.hashiVault_.addPolicy({
           name: name,
-          rules: JSON.stringify(policy, null, 2)
+          rules: JSON.stringify(policy)
         })
       });
   }
@@ -212,7 +221,31 @@ export class Vault {
   public createWalletUser(username: string, password: string) {
     const mountPoint = 'userpass';
 
-    return this.hashiVault_.write(`auth/userpass/users/${username}`, { password, policies: 'walletpolicy' })
+    return this.hashiVault_.write(`auth/userpass/users/${username}`, { password })
+      .then(() => {
+        return this.hashiVault_.auths()
+          .then((result) => {
+            let accessor = result.data['userpass/'].accessor;
+
+            //  Create the Wallet Identity and attach the wallet policy.
+            return this.hashiVault_.write('identity/entity', {
+              name: `${username}`,
+              policies: ['walletpolicy']
+            })
+              .then((result) => {
+                let entityId = result.data.id
+
+                //  Create an entity alias and tie it back to the user
+                //  console.log("entityId: " + entityId);
+
+                return this.hashiVault_.write('identity/entity-alias', {
+                  name: username,
+                  canonical_id: entityId,
+                  mount_accessor: accessor
+                })
+              });
+          })
+      })
       .catch((err) => console.error(err.message));
   }
 }
