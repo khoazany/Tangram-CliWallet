@@ -47,7 +47,7 @@ export function getVaultLink(platform, version, callback) {
 }
 
 export function download(callback) {
-    getVaultLink(os.platform(), '0.11.0', function (err, res) {
+    getVaultLink(os.platform(), '0.11.1', function (err, res) {
         if (err) {
             return callback(err);
         }
