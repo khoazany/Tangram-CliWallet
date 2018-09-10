@@ -10,9 +10,10 @@ import { WalletBalanceReceiver, WalletBalanceCommand } from './wallet/balance.co
 import { WalletBlocksCommand, WalletBlocksReceiver } from './wallet/blocks.command';
 import { WalletCommand, WalletReceiver } from './wallet/wallet.command';
 
-import { VaultDownloadCommand, VaultDownloadReceiver } from './wallet/vault.download.command';
-import { VaultInstallCommand, VaultInstallReceiver } from './wallet/vault.install.command';
+import { VaultDownloadCommand, VaultDownloadReceiver } from './vault/vault.download.command';
+import { VaultInstallCommand, VaultInstallReceiver } from './vault/vault.install.command';
 import { ModuleRef } from '@nestjs/core';
+import { VaultUnsealCommand, VaultUnsealReceiver } from './vault/vault.unseal.command';
 
 export class Commands {
     public static async registerCommands(app) {
@@ -35,5 +36,6 @@ export class Commands {
         //  Vault
         commandService.register(new VaultDownloadCommand(new VaultDownloadReceiver(settings)));
         commandService.register(new VaultInstallCommand(new VaultInstallReceiver(settings)));
+        commandService.register(new VaultUnsealCommand(new VaultUnsealReceiver(moduleRef)));
     }
 }

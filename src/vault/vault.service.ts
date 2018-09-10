@@ -43,8 +43,6 @@ export class Vault {
   }
 
   public init() {
-    let key2 = '';
-
     this.hashiVault_.initialized()
       .then((result) => {
         if (!result.initialized) {
@@ -88,12 +86,7 @@ export class Vault {
 
               writeFileSync(VAULT_SHARD_PATH, shard);
 
-              key2 = result.keys[1];
-
               return this.hashiVault_.unseal({ secret_shares: 1, key: key });
-            })
-            .then((result) => {
-              return this.hashiVault_.unseal({ secret_shares: 1, key: key2 });
             })
             .then((result) => {
               return this.createVaultServicePolicy();
@@ -115,10 +108,6 @@ export class Vault {
             .then((result) => {
               return this.revokeRootToken();
             })
-            .then((result) => {
-              //  Create bogus user
-              return this.createWalletUser('test', 'test');
-            })
             .catch((err) => {
               console.error("Vault Error: " + err.message)
             });
@@ -130,17 +119,28 @@ export class Vault {
           this.service_token_ = readFileSync(VAULT_SERVICE_TOKEN_PATH, 'utf-8');
           this.hashiVault_.token = this.service_token_;
 
-          return this.hashiVault_.unseal({ secret_shares: 1, key: shard })
-            .then((result) => {
-              console.log();
-              console.log();
-              console.log(`    ${result.progress} out of ${result.t} unseal keys left`)
-              console.log("    Please type `vault unseal` to finish unsealing the Vault.        ");
-              console.log();
-              console.log();
-            });
+          return this.unsealVault(shard);
         }
       })
+  }
+
+  public unsealVault(key: string) {
+    return this.hashiVault_.unseal({ secret_shares: 1, key: key })
+      .then((result) => {
+        if (result.sealed) {
+          console.log();
+          console.log();
+          console.log(`    ${result.progress} out of ${result.t} unseal keys left`)
+          console.log("    Please type `vault unseal` to finish unsealing the Vault.        ");
+          console.log();
+          console.log();
+        } else {
+          console.log("    Vault unsealed!")
+        }
+      })
+      .catch(() => {
+        console.log("Error in Vault unseal attempt. Did you type a bad key?");
+      });
   }
 
   public enableUserpassAuth() {
@@ -248,8 +248,6 @@ export class Vault {
                 let entityId = result.data.id
 
                 //  Create an entity alias and tie it back to the user
-                //  console.log("entityId: " + entityId);
-
                 return this.hashiVault_.write('identity/entity-alias', {
                   name: username,
                   canonical_id: entityId,
