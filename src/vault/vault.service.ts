@@ -39,13 +39,15 @@ export class Vault {
     this.hashiVault_.endpoint = settings.Endpoint;
     this.hashiVault_.token = settings.Token == '' ? undefined : settings.Token;
 
-    this.init();
+    this.root_token_ = undefined;
+    this.service_token_ = undefined;
   }
 
-  public init() {
-    this.hashiVault_.initialized()
+  public async init() {
+    await this.hashiVault_.initialized()
       .then((result) => {
         if (!result.initialized) {
+          let key2 = '';
           return this.hashiVault_.init({ secret_shares: NUM_SECRETS, secret_threshold: SECRET_THRESHOLD })
             .then((result) => {
               this.hashiVault_.token = result.root_token;
@@ -84,9 +86,14 @@ export class Vault {
               let buff = Buffer.from(key)
               let shard = buff.toString('base64');
 
+              key2 = result.keys[1];
+
               writeFileSync(VAULT_SHARD_PATH, shard);
 
               return this.hashiVault_.unseal({ secret_shares: 1, key: key });
+            })
+            .then((result) => {
+              return this.hashiVault_.unseal({ secret_shares: 1, key: key2 });
             })
             .then((result) => {
               return this.createVaultServicePolicy();
@@ -116,10 +123,18 @@ export class Vault {
           let buff = Buffer.from(shard64, 'base64');
           let shard = buff.toString('utf-8');
 
-          this.service_token_ = readFileSync(VAULT_SERVICE_TOKEN_PATH, 'utf-8');
-          this.hashiVault_.token = this.service_token_;
-
-          return this.unsealVault(shard);
+          return this.unsealVault(shard).then(() => {
+            return new Promise<void>((resolve, reject) => {
+              try {
+                this.service_token_ = readFileSync(VAULT_SERVICE_TOKEN_PATH, 'utf-8');
+                this.hashiVault_.token = this.service_token_;
+                resolve();
+              }
+              catch (e) {
+                reject(e);
+              }
+            });
+          });
         }
       })
   }
@@ -230,9 +245,11 @@ export class Vault {
       });
   }
 
-  public createWalletUser(username: string, password: string) {
-    const mountPoint = 'userpass';
+  private getUserPrivatePath(username: string) {
+    return `secret/wallets/${username}`
+  }
 
+  public async createWalletUser(username: string, password: string): Promise<any> {
     return this.hashiVault_.write(`auth/userpass/users/${username}`, { password })
       .then(() => {
         return this.hashiVault_.auths()
@@ -257,5 +274,35 @@ export class Vault {
           })
       })
       .catch((err) => console.error(err.message));
+  }
+
+  public async saveWalletData(username: string, password: string, path: string, key: string, data: string): Promise<void> {
+    return this.createWalletUser(username, password)
+      .then((res) => {
+        return this.hashiVault_.userpassLogin({ username, password });
+      })
+      .then((res) => {
+        this.hashiVault_.token = res.auth.client_token;
+        let path = join(this.getUserPrivatePath(username), 'wallet').replace(/\\/g, '/');
+
+        let packed = {};
+        packed[key] = data;
+
+        return this.hashiVault_.write(path, packed);
+      })
+      .then(() => {
+        this.hashiVault_.token = this.service_token_;
+      })
+      .catch((e) => {
+        console.log("Error while attempting to save data in Vault");
+        console.log(e);
+        this.hashiVault_.token = this.service_token_;
+      })
+  }
+
+  public async listWallets(): Promise<void> {
+    return this.hashiVault_.list(`secret/wallets/`).then((res)=>{
+      return res.data.keys;
+    });
   }
 }

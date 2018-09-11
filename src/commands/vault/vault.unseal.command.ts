@@ -10,6 +10,7 @@ import { join } from 'path';
 import { homedir } from 'os';
 import { ModuleRef } from "@nestjs/core";
 import { Vault } from "../../vault/vault.service";
+import { INestApplicationContext } from "@nestjs/common";
 
 const TANGRAM_DEFAULT_DIR = join(homedir(), '.tangramcli');
 
@@ -34,8 +35,8 @@ export class VaultUnsealCommand extends Command {
 export class VaultUnsealReceiver implements IReceiver {
     private _vaultService: Vault;
 
-    constructor(private readonly _moduleRef: ModuleRef) {
-        this._vaultService = _moduleRef.get<Vault>(Vault);
+    constructor(private readonly _app: ModuleRef) {
+        this._vaultService = _app.get<Vault>(Vault);
     }
     
     async execute(context: any, args: any, callback: any): Promise<void> {

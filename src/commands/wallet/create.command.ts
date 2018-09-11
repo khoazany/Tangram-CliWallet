@@ -1,14 +1,17 @@
 import { Command, IReceiver } from "../command.interface";
-import { Settings } from "common/config/settings.service";
 
 import request = require('request');
 
 import Agent = require('socks5-http-client/lib/Agent');
 import { API } from "../../common/utils/api";
 import { ModuleRef } from "@nestjs/core";
+import { Settings } from "../../common/config/settings.service";
 import { Kadence } from "../../kadence/kadence.service";
+import { Vault } from "../../vault/vault.service";
 import { Topic } from "../../common/enums/topic.enum";
 import { MessageEntity } from "../../common/database/entities/message.entity";
+import { INestApplicationContext } from "@nestjs/common";
+
 
 export class WalletCreateCommand extends Command {
     public register(vorpal: any): void {
@@ -21,37 +24,49 @@ export class WalletCreateCommand extends Command {
 }
 
 export class WalletCreateReceiver implements IReceiver {
-    private readonly kadence_: Kadence;
+    private settings_: Settings;
+    private vault_: Vault;
+    private kadence_: Kadence;
 
-    constructor(private _settings: Settings, private readonly _moduleRef: ModuleRef) {
-        this.kadence_ = this._moduleRef.get<Kadence>(Kadence);
+    constructor(private readonly _app: ModuleRef) {
+        this.settings_ = this._app.get(Settings);
+        this.vault_ = this._app.get(Vault);
+        this.kadence_ = this._app.get(Kadence);
     }
 
-    async execute(context: any, args: any, callback: any): Promise<void> {
-        const messageEntity = new MessageEntity().add(this._settings.Identity, this._settings.ApiVersion, { topic: Topic.WALLET_CREATE });
-        const result = await this.kadence_.send(Topic.WALLET, messageEntity);
+    execute(context: any, args: any, callback: any): void {
+        // const messageEntity = new MessageEntity().add(this._settings.Identity, this._settings.ApiVersion, { topic: Topic.WALLET_CREATE });
+        // const result = await this.kadence_.send(Topic.WALLET, messageEntity);
 
-        context.log(result);
+        // context.log(result);
 
-        callback();
+        // callback();
 
-        // API.post({
-        //     uri: '/actor/wallet/create',
-        //     json: {
-        //         password: args.password
-        //     }
-        // }, 
-        // this._settings, 
-        // function (err, res) {
-        //     if (err) {
-        //         context.log(err.body);
-        //     }
+        let self = this;
 
-        //     if (res) {
-        //         context.log(res.body);
-        //     }
+        API.post({
+            uri: '/actor/wallet/create',
+            json: {
+                password: args.password
+            }
+        },
+        this.settings_,
+        function (err, res) {
+            if (err) {
+                context.log(err.body);
+            }
 
-        //     callback();
-        // });
+            if (res) {
+                self.vault_.saveWalletData(res.body.id,
+                    args.password,
+                    'wallet',
+                    'data',
+                    JSON.stringify(res.body))
+                .then((r)=>{
+                    console.log(`Generated wallet ${res.body.id}`);
+                    callback();
+                });
+            }
+        });
     }
 }

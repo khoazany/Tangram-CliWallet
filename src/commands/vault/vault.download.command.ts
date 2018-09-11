@@ -8,6 +8,7 @@ import { API } from "common/utils/api";
 import { download } from "../../scripts/download.vault"
 import { join } from 'path';
 import { homedir } from 'os';
+import { ModuleRef } from "@nestjs/core";
 
 const TANGRAM_DEFAULT_DIR = join(homedir(), '.tangramcli');
 
@@ -22,7 +23,7 @@ export class VaultDownloadCommand extends Command {
 }
 
 export class VaultDownloadReceiver implements IReceiver {
-    constructor(private _settings: Settings) {
+    constructor(private readonly _app: ModuleRef) {
     }
 
     execute(context: any, args: any, callback: any): void {

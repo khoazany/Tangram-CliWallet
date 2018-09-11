@@ -1,10 +1,11 @@
 import { Command, IReceiver } from "../command.interface";
-import { Settings } from "common/config/settings.service";
+import { Settings } from "../../common/config/settings.service";
 
 import request = require('request');
 
 import Agent = require('socks5-http-client/lib/Agent');
 import { API } from "../../common/utils/api";
+import { ModuleRef } from "@nestjs/core";
 
 export class WalletCommand extends Command {
     public register(vorpal: any): void {
@@ -17,7 +18,10 @@ export class WalletCommand extends Command {
 }
 
 export class WalletReceiver implements IReceiver {
-    constructor(private _settings: Settings) {
+    private _settings: Settings;
+
+    constructor(private readonly _app: ModuleRef) {
+        this._settings = _app.get<Settings>(Settings);
     }
 
     execute(context: any, args: any, callback: any): void {

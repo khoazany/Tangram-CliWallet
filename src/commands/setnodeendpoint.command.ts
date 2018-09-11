@@ -1,10 +1,11 @@
 import { Command, IReceiver } from "./command.interface";
-import { Settings } from "common/config/settings.service";
 import { ModuleRef } from "@nestjs/core";
 import { Kadence } from "../kadence/kadence.service";
 import { MessageEntity } from "../common/database/entities/message.entity";
 import { Topic } from "../common/enums/topic.enum";
 import { MemberEntity } from "../common/database/entities/member.entity";
+import { Settings } from "../common/config/settings.service";
+import { INestApplicationContext } from "@nestjs/common";
 
 export class SetNodeEndpointCommand extends Command {
     public register(vorpal: any): void {
@@ -17,10 +18,12 @@ export class SetNodeEndpointCommand extends Command {
 }
 
 export class SetNodeEndpointReceiver implements IReceiver {
-    private readonly kadence_: Kadence;
+    private readonly _kadence: Kadence;
+    private readonly _settings: Settings;
 
-    constructor(private _settings: Settings, private readonly _moduleRef: ModuleRef) {
-        this.kadence_ = this._moduleRef.get<Kadence>(Kadence);
+    constructor(private readonly _app: ModuleRef) {
+        this._settings = this._app.get(Settings);
+        this._kadence = this._app.get(Kadence);
     }
 
     async execute(context: any, args: any, callback: any): Promise<void> {
@@ -37,7 +40,7 @@ export class SetNodeEndpointReceiver implements IReceiver {
             ]
         });
 
-        const result = await this.kadence_.send(Topic.JOIN, messageEntity);
+        const result = await this._kadence.send(Topic.JOIN, messageEntity);
 
         context.log(result);
 
