@@ -13,6 +13,7 @@ import * as pem from 'pem';
 import * as npid from 'npid';
 
 import * as isrunning from 'is-running'
+import { MemberEntity } from '../common/database/entities/member.entity';
 
 @Injectable()
 export class Kadence {
@@ -49,6 +50,24 @@ export class Kadence {
                     }
                 );
             }
+        });
+    }
+
+    join_network(memberEntity: MemberEntity) {
+        const self = this;
+        return new Promise((resolve, reject) => {
+            self.node_.join([memberEntity.key, {
+                hostname: memberEntity.hostname,
+                port: memberEntity.port
+            }], (err) => {
+                if (err) {
+                    self.settingsService.logger_.error('failed to join network');
+                    resolve(err);
+                }
+                else {
+                    resolve('Connected');
+                }
+            });
         });
     }
 
@@ -117,7 +136,7 @@ export class Kadence {
     private async start_up() {
         const key = readFileSync(this.settingsService.SSLKeyPath);
         const cert = readFileSync(this.settingsService.SSLCertificatePath);
-        const transport = new kadence.HTTPSTransport({ key, cert, ca: [] });
+        const transport = new kadence.HTTPTransport(); // new kadence.HTTPSTransport({ key, cert, ca: [] });
 
         this.process_events();
 
@@ -209,27 +228,27 @@ export class Kadence {
     }
 
     private add_plugins() {
-        this.node_.hashcash = this.node_.plugin(kadence.hashcash({
-            methods: [
-                Topic.LOCKSTEP,
-                Topic.PUBLISH,
-                Topic.QUERY,
-                Topic.SEED,
-                Topic.SUBSCRIBE,
-                Topic.WALLET,
-                Topic.BALANCE,
-                Topic.REWARD,
-                Topic.TRANSFER
-            ],
-            difficulty: 8
-        }));
+        // this.node_.hashcash = this.node_.plugin(kadence.hashcash({
+        //     methods: [
+        //         Topic.LOCKSTEP,
+        //         Topic.PUBLISH,
+        //         Topic.QUERY,
+        //         Topic.SEED,
+        //         Topic.SUBSCRIBE,
+        //         Topic.WALLET,
+        //         Topic.BALANCE,
+        //         Topic.REWARD,
+        //         Topic.TRANSFER
+        //     ],
+        //     difficulty: 8
+        // }));
         this.node_.quasar = this.node_.plugin(kadence.quasar());
-        this.node_.eclipse = this.node_.plugin(kadence.eclipse());
-        this.node_.spartacus = this.node_.plugin(kadence.spartacus());
-        this.node_.permission = this.node_.plugin(kadence.permission({
-            privateKey: this.node_.spartacus.privateKey,
-            walletPath: this.settingsService.EmbeddedWalletDirectory
-        }));
+        // this.node_.eclipse = this.node_.plugin(kadence.eclipse());
+        // this.node_.spartacus = this.node_.plugin(kadence.spartacus());
+        // this.node_.permission = this.node_.plugin(kadence.permission({
+        //     privateKey: this.node_.spartacus.privateKey,
+        //     walletPath: this.settingsService.EmbeddedWalletDirectory
+        // }));
     }
 
     private routing() {

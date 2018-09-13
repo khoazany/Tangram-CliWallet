@@ -27,20 +27,11 @@ export class SetNodeEndpointReceiver implements IReceiver {
     }
 
     async execute(context: any, args: any, callback: any): Promise<void> {
-        // this._settings.SwaggerEndpoint = args.endpoint.replace(/\/+$/, "");;
-        // this._settings.SwaggerApiKey = args.token;
-
         this._settings.HostIdentity = args.identity;
         this._settings.Hostname = args.endpoint;
         this._settings.HostPort = args.port
 
-        const messageEntity = new MessageEntity().add(this._settings.Identity, {}, {
-            members: [
-                new MemberEntity().add(args.endpoint, args.port, args.identity)
-            ]
-        });
-
-        const result = await this._kadence.send(Topic.JOIN, messageEntity);
+        const result = await this._kadence.join_network(new MemberEntity().add(args.endpoint, args.port, args.identity));
 
         context.log(result);
 
