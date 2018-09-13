@@ -29,7 +29,7 @@ export class Kadence {
         this.self_signed_certificate();
     }
 
-    async send(topic: Topic, messageEntity: MessageEntity) {
+    async send(topic: Topic, messageEntity: MessageEntity): Promise<any> {
         const self = this;
         return new Promise((resolve, reject) => {
             for (const member of messageEntity.optional.members) {
