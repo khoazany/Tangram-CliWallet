@@ -45,7 +45,7 @@ export class WalletTransferFundsReceiver implements IReceiver {
         });
 
         try {
-            const result = await this._kadence.send(Topic.WALLET, messageEntity);
+            const result = await this._kadence.send(Topic.RPC, messageEntity);
             // returns the block..
             context.log(result);
 
