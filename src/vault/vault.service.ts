@@ -26,7 +26,7 @@ export class Vault {
   private service_token_: string;
 
   constructor(private readonly settings: Settings) {
-    this.vault_process_ = spawn('vault', ['server', '-config', 'vault.json'], {
+    this.vault_process_ = spawn(join(TANGRAM_DEFAULT_DIR, 'vault'), ['server', '-config', 'vault.json'], {
       cwd: TANGRAM_DEFAULT_DIR
     });
 

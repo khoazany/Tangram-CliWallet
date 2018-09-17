@@ -2,8 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Settings } from '../common/config/settings.service';
 import { MessageEntity } from '../common/database/entities/message.entity';
 import { Topic } from '../common/enums/topic.enum';
-import { SeedService } from './seed.service';
-import { QuasarService } from './quasar.service';
 import { existsSync, writeFileSync, readFileSync } from 'fs';
 import * as kadence from '@kadenceproject/kadence';
 import * as level from 'level';
@@ -13,7 +11,6 @@ import * as pem from 'pem';
 import * as npid from 'npid';
 
 import * as isrunning from 'is-running'
-import { MemberEntity } from '../common/database/entities/member.entity';
 
 @Injectable()
 export class Kadence {
@@ -21,9 +18,7 @@ export class Kadence {
     private logger_: bunyan;
 
     constructor(
-        private readonly settingsService: Settings,
-        private readonly seedService: SeedService,
-        private readonly quasarService: QuasarService
+        private readonly settingsService: Settings
     ) {
         this.create_logger();
         this.self_signed_certificate();
@@ -53,20 +48,10 @@ export class Kadence {
         });
     }
 
-    join_network(memberEntity: MemberEntity) {
-        const self = this;
+    quasarPublish(topic: string, payload: Object): Promise<any> {
         return new Promise((resolve, reject) => {
-            self.node_.join([memberEntity.key, {
-                hostname: memberEntity.hostname,
-                port: memberEntity.port
-            }], (err) => {
-                if (err) {
-                    self.settingsService.logger_.error('failed to join network');
-                    resolve(err);
-                }
-                else {
-                    resolve('Connected');
-                }
+            this.node_.quasarPublish(topic, JSON.stringify(payload), {}, () => {
+                resolve();
             });
         });
     }
@@ -91,7 +76,7 @@ export class Kadence {
 
     private process_events() {
         const self = this;
-        
+
         try {
             //  If the file exists, check if a process with that
             //  PID exists, if not remove it and continue.
@@ -164,7 +149,9 @@ export class Kadence {
             this.logger_.info(`Kadence identity: ${this.node_.identity.toString('hex')}`);
             this.settingsService.Identity = this.node_.identity.toString('hex');
             this.settingsService.OnionAddress = this.node_.contact.hostname;
-            this.settingsService.TorPID = this.node_.onion.tor.process.pid;
+            try {
+                this.settingsService.TorPID = this.node_.onion.tor.process.pid;
+            } catch (error) { }
         });
     }
 
@@ -209,7 +196,7 @@ export class Kadence {
 
     private onion_enabled() {
         if (!!parseInt(this.settingsService.OnionEnabled.toString())) {
-            kadence.constants.T_RESPONSETIMEOUT = 20000;
+            kadence.constants.T_RESPONSETIMEOUT = 60000;
             this.node_.onion = this.node_.plugin(kadence.onion({
                 dataDirectory: this.settingsService.OnionHiddenServiceDirectory,
                 virtualPort: parseInt(this.settingsService.OnionVirtualPort.toString()),
@@ -257,13 +244,6 @@ export class Kadence {
 
             next();
         });
-
-        this.node_.use(Topic.SEED, this.seedService.handler);
-
-        this.node_.quasarSubscribe([
-            Topic.LOCKSTEP,
-            Topic.QUERY
-        ], this.quasarService.handler);
     }
 
     private self_signed_certificate(): void {

@@ -1,23 +1,18 @@
 import { Command, IReceiver } from "../command.interface";
 
-import request = require('request');
-
-import Agent = require('socks5-http-client/lib/Agent');
-import { API } from "../../common/utils/api";
 import { ModuleRef } from "@nestjs/core";
 import { Settings } from "../../common/config/settings.service";
 import { Kadence } from "../../kadence/kadence.service";
 import { Vault } from "../../vault/vault.service";
 import { Topic } from "../../common/enums/topic.enum";
 import { MessageEntity } from "../../common/database/entities/message.entity";
-import { INestApplicationContext } from "@nestjs/common";
-import { MemberEntity } from "common/database/entities/member.entity";
+import { MemberEntity } from "../../common/database/entities/member.entity";
 
 
 export class WalletCreateCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
-        vorpal.command('wallet create <password>', 'Create new wallet')
+        vorpal.command('wallet create', 'Create new wallet')
             .action(function (args, cb) {
                 self.execute(this, args, cb);
             });
@@ -36,13 +31,17 @@ export class WalletCreateReceiver implements IReceiver {
     }
 
     async execute(context: any, args: any, callback: any): Promise<void> {
-        const messageEntity = new MessageEntity().add(this.settings_.Identity, this.settings_.ApiVersion, {
-            topic: Topic.WALLET_CREATE,
-            members: [new MemberEntity().add(this.settings_.Hostname, this.settings_.Port, this.settings_.HostIdentity)]
-        });
+        const messageEntity = new MessageEntity().add(this.settings_.Identity, this.settings_.ApiVersion,
+            {
+                topic: Topic.WALLET_CREATE,
+                members: [new MemberEntity().add(this.settings_.Node, this.settings_.NodePort, this.settings_.NodeIdentity)]
+            });
 
         try {
             const result = await this.kadence_.send(Topic.WALLET, messageEntity);
+
+            this.settings_.Wallet = result;
+
             this.vault_.saveWalletData(result.id,
                 args.password,
                 'wallet',
