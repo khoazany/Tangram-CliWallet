@@ -12,7 +12,7 @@ import { MemberEntity } from "../../common/database/entities/member.entity";
 export class WalletCreateCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
-        vorpal.command('wallet create', 'Create new wallet')
+        vorpal.command('wallet create <password>', 'Create new wallet')
             .action(function (args, cb) {
                 self.execute(this, args, cb);
             });
@@ -40,13 +40,11 @@ export class WalletCreateReceiver implements IReceiver {
         try {
             const result = await this.kadence_.send(Topic.WALLET, messageEntity);
 
-            this.settings_.Wallet = result;
-
             this.vault_.saveWalletData(result.id,
                 args.password,
                 'wallet',
                 'data',
-                JSON.stringify(result))
+                result)
                 .then((r) => {
                     console.log(`Generated wallet ${result.id}`);
                     callback();
