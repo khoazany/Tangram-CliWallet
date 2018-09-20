@@ -8,11 +8,12 @@ import { MessageEntity } from "../../common/database/entities/message.entity";
 import { MemberEntity } from "../../common/database/entities/member.entity";
 
 import * as R from 'ramda';
+import { Vault } from "../../vault/vault.service";
 
 export class WalletRewardCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
-        vorpal.command('wallet reward <identifier> <address> <amount>', 'Reward wallet')
+        vorpal.command('wallet reward <identifier> <address> <amount> <password>', 'Reward wallet')
             .action(function (args, cb) {
                 self.execute(this, args, cb);
             });
@@ -22,20 +23,24 @@ export class WalletRewardCommand extends Command {
 export class WalletRewardReceiver implements IReceiver {
     private _settings: Settings;
     private _kadence: Kadence;
+    private _vault: Vault;
 
     constructor(private readonly _app: ModuleRef) {
         this._settings = _app.get<Settings>(Settings);
         this._kadence = _app.get<Kadence>(Kadence);
+        this._vault = _app.get<Vault>(Vault);
     }
 
     async execute(context: any, args: any, callback: any): Promise<void> {
+        let wallet = await this._vault.getWalletData(args.identifier, args.password);
+
         const messageEntity = new MessageEntity().add(args.identifier,
             {
                 apiVersion: this._settings.ApiVersion,
                 identifier: args.identifier,
                 address: args.address,
                 amount: args.amount,
-                swheKeypair: R.last(this._settings.Wallet.homomorphic)
+                swheKeypair: R.last(wallet.homomorphic)
             },
             {
                 topic: Topic.REWARD,

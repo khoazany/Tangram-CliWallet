@@ -6,11 +6,12 @@ import { MessageEntity } from "../../common/database/entities/message.entity";
 import { Topic } from "../../common/enums/topic.enum";
 import { MemberEntity } from "../../common/database/entities/member.entity";
 import * as R from 'ramda';
+import { Vault } from "../../vault/vault.service";
 
 export class WalletBalanceCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
-        vorpal.command('wallet balance <identifier> <address>', 'Get wallet balance')
+        vorpal.command('wallet balance <identifier> <address> <password>', 'Get wallet balance')
             .action(function (args, cb) {
                 self.execute(this, args, cb);
             });
@@ -20,6 +21,7 @@ export class WalletBalanceCommand extends Command {
 export class WalletBalanceReceiver implements IReceiver {
     private _settings: Settings;
     private _kadence: Kadence;
+    private _vault: Vault;
 
     constructor(private readonly _app: ModuleRef) {
         this._settings = _app.get<Settings>(Settings);
@@ -27,9 +29,12 @@ export class WalletBalanceReceiver implements IReceiver {
     }
 
     async execute(context: any, args: any, callback: any): Promise<void> {
-        const keyPair: any = R.propOr(null, 'keyPairs', R.find(R.propEq('base58', args.address), this._settings.Wallet.stealth));
-        const payload: any = R.propOr(null, 'payload', R.find(R.propEq('base58', args.address), this._settings.Wallet.stealth));
-        const scan: any = R.propOr(null, 'scan', R.find(R.propEq('base58', args.address), this._settings.Wallet.stealth));
+        let wallet = await this._vault.getWalletData(args.identifier, args.password);
+
+        const keyPair: any = R.propOr(null, 'keyPairs', R.find(R.propEq('base58', args.address), wallet.stealth));
+        const payload: any = R.propOr(null, 'payload', R.find(R.propEq('base58', args.address), wallet.stealth));
+        const scan: any = R.propOr(null, 'scan', R.find(R.propEq('base58', args.address), wallet.stealth));
+
         const messageEntity = new MessageEntity().add(args.identifier,
             {
                 apiVersion: this._settings.ApiVersion,
@@ -38,7 +43,7 @@ export class WalletBalanceReceiver implements IReceiver {
                 xpub: keyPair.publicKey,
                 secretKey: keyPair.secretKey,
                 stealthKeypair: { payload, scan },
-                boxSealKeypair: this._settings.Wallet.box_seal[0]
+                boxSealKeypair: wallet.box_seal[0]
             },
             {
                 topic: Topic.BALANCE,
@@ -49,7 +54,6 @@ export class WalletBalanceReceiver implements IReceiver {
             const result = await this._kadence.send(Topic.WALLET, messageEntity);
 
             context.log(result);
-
         } catch (err) {
             context.log(err);
         }

@@ -9,11 +9,12 @@ import { MemberEntity } from "../../common/database/entities/member.entity";
 
 import * as R from 'ramda';
 import { LockstepEntity } from "../../common/database/entities/lockstep.entity";
+import { Vault } from "../../vault/vault.service";
 
 export class WalletTransferFundsCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
-        vorpal.command('wallet transfer <identifier> <account> <change> <link> <amount>', 'Transfer funds to link account or inter-account.')
+        vorpal.command('wallet transfer <identifier> <account> <change> <link> <amount> <password>', 'Transfer funds to link account or inter-account.')
             .action(function (args, cb) {
                 self.execute(this, args, cb);
             });
@@ -23,16 +24,20 @@ export class WalletTransferFundsCommand extends Command {
 export class WalletTransferFundsReceiver implements IReceiver {
     private _settings: Settings;
     private _kadence: Kadence;
+    private _vault: Vault;
 
     constructor(private readonly _app: ModuleRef) {
         this._settings = _app.get<Settings>(Settings);
         this._kadence = _app.get<Kadence>(Kadence);
+        this._vault = _app.get<Vault>(Vault);
     }
 
     async execute(context: any, args: any, callback: any): Promise<void> {
-        const keyPair: any = R.propOr(null, 'keyPairs', R.find(R.propEq('base58', args.account), this._settings.Wallet.stealth));
-        const payload: any = R.propOr(null, 'payload', R.find(R.propEq('base58', args.account), this._settings.Wallet.stealth));
-        const scan: any = R.propOr(null, 'scan', R.find(R.propEq('base58', args.account), this._settings.Wallet.stealth));
+        let wallet = await this._vault.getWalletData(args.identifier, args.password);
+
+        const keyPair: any = R.propOr(null, 'keyPairs', R.find(R.propEq('base58', args.account), wallet.stealth));
+        const payload: any = R.propOr(null, 'payload', R.find(R.propEq('base58', args.account), wallet.stealth));
+        const scan: any = R.propOr(null, 'scan', R.find(R.propEq('base58', args.account), wallet.stealth));
         const messageEntity = new MessageEntity().add(args.identifier,
             {
                 apiVersion: this._settings.ApiVersion,
@@ -44,7 +49,7 @@ export class WalletTransferFundsReceiver implements IReceiver {
                 xpub: keyPair.publicKey,
                 secretKey: keyPair.secretKey,
                 stealthKeypair: { payload, scan },
-                boxSealKeypair: this._settings.Wallet.box_seal[0]
+                boxSealKeypair: wallet.box_seal[0]
             },
             {
                 topic: Topic.TRANSFER,
