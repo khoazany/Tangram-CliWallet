@@ -1,6 +1,6 @@
 import { Command, IReceiver } from "../command.interface";
 
-import { ModuleRef } from "@nestjs/core";
+import { INestApplicationContext } from "@nestjs/common";
 import { Settings } from "../../common/config/settings.service";
 import { Kadence } from "../../kadence/kadence.service";
 import { MessageEntity } from "../../common/database/entities/message.entity";
@@ -25,7 +25,7 @@ export class WalletAddressReceiver implements IReceiver {
     private _kadence: Kadence;
     private _vault: Vault;
 
-    constructor(private readonly _app: ModuleRef) {
+    constructor(private readonly _app: INestApplicationContext) {
         this._settings = _app.get<Settings>(Settings);
         this._kadence = _app.get<Kadence>(Kadence);
         this._vault = _app.get<Vault>(Vault);

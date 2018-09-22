@@ -3,14 +3,12 @@ import { Settings } from "common/config/settings.service";
 
 import request = require('request');
 
-import Agent = require('socks5-http-client/lib/Agent');
 import { API } from "common/utils/api";
 import { download } from "scripts/download.vault"
 import { join } from 'path';
 import { homedir } from 'os';
-import { ModuleRef } from "@nestjs/core";
-import { Vault } from "../../vault/vault.service";
 import { INestApplicationContext } from "@nestjs/common";
+import { Vault } from "../../vault/vault.service";
 
 const TANGRAM_DEFAULT_DIR = join(homedir(), '.tangramcli');
 
@@ -35,7 +33,7 @@ export class VaultUnsealCommand extends Command {
 export class VaultUnsealReceiver implements IReceiver {
     private _vaultService: Vault;
 
-    constructor(private readonly _app: ModuleRef) {
+    constructor(private readonly _app: INestApplicationContext) {
         this._vaultService = _app.get<Vault>(Vault);
     }
     

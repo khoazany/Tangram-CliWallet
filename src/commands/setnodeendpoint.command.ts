@@ -1,5 +1,5 @@
 import { Command, IReceiver } from "./command.interface";
-import { ModuleRef } from "@nestjs/core";
+import { INestApplicationContext } from "@nestjs/common";
 import { Kadence } from "../kadence/kadence.service";
 import { MemberEntity } from "../common/database/entities/member.entity";
 import { Settings } from "../common/config/settings.service";
@@ -20,7 +20,7 @@ export class SetNodeEndpointReceiver implements IReceiver {
     private readonly _kadence: Kadence;
     private readonly _settings: Settings;
 
-    constructor(private readonly _app: ModuleRef) {
+    constructor(private readonly _app: INestApplicationContext) {
         this._settings = this._app.get(Settings);
         this._kadence = this._app.get(Kadence);
     }

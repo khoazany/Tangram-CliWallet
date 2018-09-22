@@ -3,12 +3,11 @@ import { Settings } from "common/config/settings.service";
 
 import request = require('request');
 
-import Agent = require('socks5-http-client/lib/Agent');
 import { API } from "common/utils/api";
 import { join } from 'path';
 import { homedir } from 'os';
 import fs = require('fs');
-import { ModuleRef } from "@nestjs/core";
+import { INestApplicationContext } from "@nestjs/common";
 
 const TANGRAM_DEFAULT_DIR = join(homedir(), '.tangramcli');
 
@@ -23,7 +22,7 @@ export class VaultInstallCommand extends Command {
 }
 
 export class VaultInstallReceiver implements IReceiver {
-    constructor(private readonly _app: ModuleRef) {
+    constructor(private readonly _app: INestApplicationContext) {
     }
 
     execute(context: any, args: any, callback: any): void {
