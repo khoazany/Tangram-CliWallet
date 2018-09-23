@@ -1,5 +1,5 @@
 {
-  "name": "tangram-wallet-cli",
+  "name": "@tangrams.io/tangram-cli-wallet",
   "version": "0.8.0",
   "description": "Tangram light wallet.",
   "author": {
