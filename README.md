@@ -7,10 +7,10 @@ Tangram Light Wallet.
 ## Installation
 
 ```bash
-$ npm install -g tangram-wallet-cli
+$ npm install -g @tangrams.io/tangram-cli-wallet
 ```
 
 ## Running the app
 ```bash
-$ tangram-wallet-cli
+$ tangram-cli-wallet
 ```

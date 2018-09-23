@@ -7,12 +7,6 @@ export enum Topic {
     WALLET = 'WALLET',
     REWARD = 'REWARD',
     LOCKSTEP = 'LOCKSTEP',
-    QUERY = 'QUERY',
-    SEED = 'SEED',
-    PUBLISH = 'PUBLISH',
-    SUBSCRIBE = 'SUBSCRIBE',
-    SHARE = 'SECRET_SHARE',
-    RECOVER = 'SECRET_RECOVER',
     JOIN = 'JOIN',
     RPC = 'RPC'
 }

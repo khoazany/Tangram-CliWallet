@@ -46,7 +46,7 @@ let defaultSettings = {
 
     // Onion Plugin
     OnionEnabled: '1',
-    OnionVirtualPort: '443',
+    OnionVirtualPort: '80',
     OnionHiddenServiceDirectory: HIDDEN_SERVICE_DIR,
     OnionLoggingVerbosity: 'notice',
     OnionLoggingEnabled: '0',

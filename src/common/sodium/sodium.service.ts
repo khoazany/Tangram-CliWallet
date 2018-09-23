@@ -1,5 +1,4 @@
 import * as sodium from 'sodium-native';
-import * as alloc from 'buffer-alloc-unsafe';
 
 export class SodiumService {
 
