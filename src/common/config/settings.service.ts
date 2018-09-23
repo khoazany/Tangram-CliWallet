@@ -107,9 +107,9 @@ let defaultSettings = {
     SwaggerApiKey: '',
 
     // Kadence contact
-    Hostname: '',
-    HostPort: '',
-    HostIdentity: ''
+    NodeName: '',
+    NodePort: '',
+    NodeIdentity: ''
 }
 
 @Injectable()
@@ -165,10 +165,12 @@ export class Settings implements ISettings {
     Token: string;
     SwaggerEndpoint: string;
     SwaggerApiKey: string;
-    Hostname: string;
-    HostPort: string;
-    HostIdentity: string;
+    Node: string;
+    NodePort: number;
+    NodeIdentity: string;
     
+    Wallet: any;
+
     logger_: bunyan;
 
     constructor() {

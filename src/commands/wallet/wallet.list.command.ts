@@ -1,8 +1,7 @@
 import { Command, IReceiver } from "../command.interface";
 import { Settings } from "common/config/settings.service";
 
-import Agent = require('socks5-http-client/lib/Agent');
-import { ModuleRef } from "@nestjs/core";
+import { INestApplicationContext } from "@nestjs/common";
 import { Vault } from "../../vault/vault.service";
 
 export class WalletListCommand extends Command {
@@ -18,7 +17,7 @@ export class WalletListCommand extends Command {
 export class WalletListReceiver implements IReceiver {
     private _vault: Vault;
 
-    constructor(private readonly _app: ModuleRef) {
+    constructor(private readonly _app: INestApplicationContext) {
         this._vault = _app.get<Vault>(Vault);
     }
 

@@ -26,7 +26,7 @@ export class Vault {
   private service_token_: string;
 
   constructor(private readonly settings: Settings) {
-    this.vault_process_ = spawn('vault', ['server', '-config', 'vault.json'], {
+    this.vault_process_ = spawn(join(TANGRAM_DEFAULT_DIR, 'vault'), ['server', '-config', 'vault.json'], {
       cwd: TANGRAM_DEFAULT_DIR
     });
 
@@ -286,7 +286,7 @@ export class Vault {
         let path = join(this.getUserPrivatePath(username), 'wallet').replace(/\\/g, '/');
 
         let packed = {};
-        packed[key] = data;
+        packed[key] = JSON.stringify(data);
 
         return this.hashiVault_.write(path, packed);
       })
@@ -300,8 +300,26 @@ export class Vault {
       })
   }
 
+  public async getWalletData(username: string, password: string): Promise<any> {
+    return this.hashiVault_.userpassLogin({ username, password })
+      .then((res) => {
+        this.hashiVault_.token = res.auth.client_token;
+        
+        let path = join(this.getUserPrivatePath(username), 'wallet').replace(/\\/g, '/');
+
+        return this.hashiVault_.read(path);
+      })
+      .then((res)=>{
+        return JSON.parse(res.data.data);
+      })
+      .catch((e) => {
+        console.log("Error while attempting to read data from Vault. Did you type the wrong password?");
+        this.hashiVault_.token = this.service_token_;
+      })
+  }
+
   public async listWallets(): Promise<void> {
-    return this.hashiVault_.list(`secret/wallets/`).then((res)=>{
+    return this.hashiVault_.list(`secret/wallets/`).then((res) => {
       return res.data.keys;
     });
   }

@@ -13,5 +13,6 @@ export enum Topic {
     SUBSCRIBE = 'SUBSCRIBE',
     SHARE = 'SECRET_SHARE',
     RECOVER = 'SECRET_RECOVER',
-    JOIN = 'JOIN'
+    JOIN = 'JOIN',
+    RPC = 'RPC'
 }

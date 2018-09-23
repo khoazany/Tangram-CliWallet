@@ -2,8 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Settings } from '../common/config/settings.service';
 import { MessageEntity } from '../common/database/entities/message.entity';
 import { Topic } from '../common/enums/topic.enum';
-import { SeedService } from './seed.service';
-import { QuasarService } from './quasar.service';
 import { existsSync, writeFileSync, readFileSync } from 'fs';
 import * as kadence from '@kadenceproject/kadence';
 import * as level from 'level';
@@ -20,15 +18,13 @@ export class Kadence {
     private logger_: bunyan;
 
     constructor(
-        private readonly settingsService: Settings,
-        private readonly seedService: SeedService,
-        private readonly quasarService: QuasarService
+        private readonly settingsService: Settings
     ) {
         this.create_logger();
         this.self_signed_certificate();
     }
 
-    async send(topic: Topic, messageEntity: MessageEntity) {
+    async send(topic: Topic, messageEntity: MessageEntity): Promise<any> {
         const self = this;
         return new Promise((resolve, reject) => {
             for (const member of messageEntity.optional.members) {
@@ -52,6 +48,14 @@ export class Kadence {
         });
     }
 
+    quasarPublish(topic: string, payload: Object): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.node_.quasarPublish(topic, JSON.stringify(payload), {}, () => {
+                resolve();
+            });
+        });
+    }
+
     private create_logger() {
         this.logger_ = bunyan.createLogger({
             name: 'kadence',
@@ -72,7 +76,7 @@ export class Kadence {
 
     private process_events() {
         const self = this;
-        
+
         try {
             //  If the file exists, check if a process with that
             //  PID exists, if not remove it and continue.
@@ -117,7 +121,7 @@ export class Kadence {
     private async start_up() {
         const key = readFileSync(this.settingsService.SSLKeyPath);
         const cert = readFileSync(this.settingsService.SSLCertificatePath);
-        const transport = new kadence.HTTPSTransport({ key, cert, ca: [] });
+        const transport = new kadence.HTTPTransport(); // new kadence.HTTPSTransport({ key, cert, ca: [] });
 
         this.process_events();
 
@@ -145,7 +149,9 @@ export class Kadence {
             this.logger_.info(`Kadence identity: ${this.node_.identity.toString('hex')}`);
             this.settingsService.Identity = this.node_.identity.toString('hex');
             this.settingsService.OnionAddress = this.node_.contact.hostname;
-            this.settingsService.TorPID = this.node_.onion.tor.process.pid;
+            try {
+                this.settingsService.TorPID = this.node_.onion.tor.process.pid;
+            } catch (error) { }
         });
     }
 
@@ -190,7 +196,7 @@ export class Kadence {
 
     private onion_enabled() {
         if (!!parseInt(this.settingsService.OnionEnabled.toString())) {
-            kadence.constants.T_RESPONSETIMEOUT = 20000;
+            kadence.constants.T_RESPONSETIMEOUT = 60000;
             this.node_.onion = this.node_.plugin(kadence.onion({
                 dataDirectory: this.settingsService.OnionHiddenServiceDirectory,
                 virtualPort: parseInt(this.settingsService.OnionVirtualPort.toString()),
@@ -209,27 +215,27 @@ export class Kadence {
     }
 
     private add_plugins() {
-        this.node_.hashcash = this.node_.plugin(kadence.hashcash({
-            methods: [
-                Topic.LOCKSTEP,
-                Topic.PUBLISH,
-                Topic.QUERY,
-                Topic.SEED,
-                Topic.SUBSCRIBE,
-                Topic.WALLET,
-                Topic.BALANCE,
-                Topic.REWARD,
-                Topic.TRANSFER
-            ],
-            difficulty: 8
-        }));
+        // this.node_.hashcash = this.node_.plugin(kadence.hashcash({
+        //     methods: [
+        //         Topic.LOCKSTEP,
+        //         Topic.PUBLISH,
+        //         Topic.QUERY,
+        //         Topic.SEED,
+        //         Topic.SUBSCRIBE,
+        //         Topic.WALLET,
+        //         Topic.BALANCE,
+        //         Topic.REWARD,
+        //         Topic.TRANSFER
+        //     ],
+        //     difficulty: 8
+        // }));
         this.node_.quasar = this.node_.plugin(kadence.quasar());
-        this.node_.eclipse = this.node_.plugin(kadence.eclipse());
-        this.node_.spartacus = this.node_.plugin(kadence.spartacus());
-        this.node_.permission = this.node_.plugin(kadence.permission({
-            privateKey: this.node_.spartacus.privateKey,
-            walletPath: this.settingsService.EmbeddedWalletDirectory
-        }));
+        // this.node_.eclipse = this.node_.plugin(kadence.eclipse());
+        // this.node_.spartacus = this.node_.plugin(kadence.spartacus());
+        // this.node_.permission = this.node_.plugin(kadence.permission({
+        //     privateKey: this.node_.spartacus.privateKey,
+        //     walletPath: this.settingsService.EmbeddedWalletDirectory
+        // }));
     }
 
     private routing() {
@@ -238,13 +244,6 @@ export class Kadence {
 
             next();
         });
-
-        this.node_.use(Topic.SEED, this.seedService.handler);
-
-        this.node_.quasarSubscribe([
-            Topic.LOCKSTEP,
-            Topic.QUERY
-        ], this.quasarService.handler);
     }
 
     private self_signed_certificate(): void {

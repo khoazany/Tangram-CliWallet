@@ -87,7 +87,7 @@ export interface ISettings {
         SwaggerApiKey: string;
 
         // Kadence contact
-        Hostname: string;
-        HostPort: string;
-        HostIdentity: string;
+        Node: string;
+        NodePort: number;
+        NodeIdentity: string;
 }

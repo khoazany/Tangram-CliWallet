@@ -3,9 +3,8 @@ import { Settings } from "../../common/config/settings.service";
 
 import request = require('request');
 
-import Agent = require('socks5-http-client/lib/Agent');
 import { API } from "../../common/utils/api";
-import { ModuleRef } from "@nestjs/core";
+import { INestApplicationContext } from "@nestjs/common";
 
 export class WalletBlocksCommand extends Command {
     public register(vorpal: any): void {
@@ -20,7 +19,7 @@ export class WalletBlocksCommand extends Command {
 export class WalletBlocksReceiver implements IReceiver {
     private _settings: Settings;
 
-    constructor(private readonly _app: ModuleRef) {
+    constructor(private readonly _app: INestApplicationContext) {
         this._settings = _app.get<Settings>(Settings);
     }
 
