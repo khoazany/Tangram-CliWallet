@@ -2,10 +2,12 @@ import { Injectable } from '@nestjs/common';
 import * as HashiVault from 'node-vault';
 import { Settings } from '../common/config/settings.service';
 
-import { spawn, ChildProcess } from 'child_process'
+import { ChildProcess } from 'child_process'
 import { join } from 'path';
 import { homedir } from 'os';
 import { writeFileSync, readFileSync } from 'fs';
+
+const spawn = require('await-spawn')
 
 process.env.DEBUG = 'node-vault'; // switch on debug mode
 
@@ -20,20 +22,12 @@ const SECRET_THRESHOLD = 2;
 @Injectable()
 export class Vault {
   private hashiVault_: HashiVault.client;
-  private vault_process_: ChildProcess;
+  private vault_process_: any;
 
   private root_token_: string;
   private service_token_: string;
 
   constructor(private readonly settings: Settings) {
-    this.vault_process_ = spawn(join(TANGRAM_DEFAULT_DIR, 'vault'), ['server', '-config', 'vault.json'], {
-      cwd: TANGRAM_DEFAULT_DIR
-    });
-
-    //this.vault_process_.stdout.on('data', (data) => {
-    //  console.log(`Vault Server: ${data}`);
-    //});
-
     this.hashiVault_ = HashiVault();
     this.hashiVault_.apiVersion = settings.ApiVersion;
     this.hashiVault_.endpoint = settings.Endpoint;
@@ -44,6 +38,10 @@ export class Vault {
   }
 
   public async init() {
+    this.vault_process_ = await spawn(join(TANGRAM_DEFAULT_DIR, 'vault'), ['server', '-config', 'vault.json'], {
+      cwd: TANGRAM_DEFAULT_DIR
+    }).child;
+
     await this.hashiVault_.initialized()
       .then((result) => {
         if (!result.initialized) {
@@ -304,12 +302,12 @@ export class Vault {
     return this.hashiVault_.userpassLogin({ username, password })
       .then((res) => {
         this.hashiVault_.token = res.auth.client_token;
-        
+
         let path = join(this.getUserPrivatePath(username), 'wallet').replace(/\\/g, '/');
 
         return this.hashiVault_.read(path);
       })
-      .then((res)=>{
+      .then((res) => {
         return JSON.parse(res.data.data);
       })
       .catch((e) => {

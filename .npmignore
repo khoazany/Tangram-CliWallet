@@ -32,3 +32,4 @@ she-dlp-0-20-gt.bin
 
 *.map
 .gitattributes
+*.tgz

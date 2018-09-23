@@ -1,6 +1,6 @@
 {
   "name": "@tangrams.io/tangram-cli-wallet",
-  "version": "0.8.0",
+  "version": "1.0.0",
   "description": "Tangram light wallet.",
   "author": {
     "name": "pingpong",
@@ -15,13 +15,13 @@
     "prestart:prod": "rm -rf dist && tsc",
     "start:prod": "node dist/main.js",
     "start:hmr": "node dist/server",
-    "start:build":"tsc -p tsconfig.json",
+    "start:build": "tsc -p tsconfig.json",
     "test": "jest",
     "test:cov": "jest --coverage",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "webpack": "webpack --config webpack.config.js"
   },
-  "bin":{
+  "bin": {
     "tangram-cli-wallet": "./bin/global.js"
   },
   "preferGlobal": true,
@@ -31,6 +31,7 @@
     "@nestjs/common": "^5.0.0",
     "@nestjs/core": "^5.0.0",
     "@types/request": "^2.47.1",
+    "await-spawn": "^2.1.1",
     "buffer-alloc-unsafe": "^1.1.0",
     "bunyan": "^1.8.12",
     "bunyan-rotating-file-stream": "^1.6.3",
