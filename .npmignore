@@ -1,0 +1,34 @@
+# dependencies
+/node_modules
+
+# IDE
+/.idea
+/.awcache
+/.vscode
+
+# misc
+npm-debug.log
+.DS_Store
+she-dlp-0-20-gt.bin
+
+# tests
+/test
+/coverage
+/.nyc_output
+
+# src
+/src
+
+# typedoc
+/apidoc
+
+# vscode
+/.vscode
+
+# nestcli
+.nestcli.json
+
+.prettierrc
+
+*.map
+.gitattributes

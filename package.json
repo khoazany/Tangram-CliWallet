@@ -1,6 +1,6 @@
 {
   "name": "tangram-wallet-cli",
-  "version": "0.0.1",
+  "version": "0.8.0",
   "description": "Tangram light wallet.",
   "author": {
     "name": "pingpong",
@@ -15,11 +15,16 @@
     "prestart:prod": "rm -rf dist && tsc",
     "start:prod": "node dist/main.js",
     "start:hmr": "node dist/server",
+    "start:build":"tsc -p tsconfig.json",
     "test": "jest",
     "test:cov": "jest --coverage",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "webpack": "webpack --config webpack.config.js"
   },
+  "bin":{
+    "tangram-cli-wallet": "./bin/global.js"
+  },
+  "preferGlobal": true,
   "dependencies": {
     "7zip": "0.0.6",
     "@kadenceproject/kadence": "^4.1.4",
@@ -95,5 +100,6 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "coverageDirectory": "../coverage"
-  }
+  },
+  "main": "./dist/main.js"
 }
