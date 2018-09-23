@@ -2,37 +2,15 @@
 
 ## Description
 
-Tangram light wallet.
+Tangram Light Wallet.
 
 ## Installation
 
 ```bash
-$ npm install
+$ npm install -g tangram-wallet-cli
 ```
 
 ## Running the app
-
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-npm run start:prod
+$ tangram-wallet-cli
 ```
-
-## Test
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
