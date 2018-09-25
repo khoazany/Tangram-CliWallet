@@ -11,6 +11,7 @@ import * as pem from 'pem';
 import * as npid from 'npid';
 
 import * as isrunning from 'is-running'
+import { Vault } from '../vault/vault.service';
 
 @Injectable()
 export class Kadence {
@@ -18,7 +19,8 @@ export class Kadence {
     private logger_: bunyan;
 
     constructor(
-        private readonly settingsService: Settings
+        private readonly settingsService: Settings,
+        private readonly vaultService: Vault
     ) {
         this.create_logger();
         this.self_signed_certificate();
@@ -274,6 +276,9 @@ export class Kadence {
     private killChildrenAndExit(kad: Kadence) {
         kad.logger_.info('exiting, killing child services, cleaning up');
         npid.remove(kad.settingsService.DaemonPidFilePath);
+
+        this.vaultService.kill();
+
         process.removeListener('exit', kad.killChildrenAndExit);
         process.kill(parseInt(kad.settingsService.TorPID.toString()));
         process.exit(0);

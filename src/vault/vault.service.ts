@@ -22,7 +22,7 @@ const SECRET_THRESHOLD = 2;
 @Injectable()
 export class Vault {
   private hashiVault_: HashiVault.client;
-  private vault_process_: any;
+  private vault_process_: ChildProcess;
 
   private root_token_: string;
   private service_token_: string;
@@ -42,99 +42,101 @@ export class Vault {
       cwd: TANGRAM_DEFAULT_DIR
     }).child;
 
-    await this.hashiVault_.initialized()
-      .then((result) => {
-        if (!result.initialized) {
-          let key2 = '';
-          return this.hashiVault_.init({ secret_shares: NUM_SECRETS, secret_threshold: SECRET_THRESHOLD })
-            .then((result) => {
-              this.hashiVault_.token = result.root_token;
-              this.root_token_ = result.root_token;
+    setTimeout(async () => {
+      await this.hashiVault_.initialized()
+        .then((result) => {
+          if (!result.initialized) {
+            let key2 = '';
+            return this.hashiVault_.init({ secret_shares: NUM_SECRETS, secret_threshold: SECRET_THRESHOLD })
+              .then((result) => {
+                this.hashiVault_.token = result.root_token;
+                this.root_token_ = result.root_token;
 
-              const key: string = result.keys[0];
+                const key: string = result.keys[0];
 
-              console.log()
-              console.log()
-              //  TODO: Make share and threshold configurable.
-              console.log("###########################################################");
-              console.log("#                   !!! ATTENTION !!!                     #");
-              console.log("###########################################################");
-              console.log("    We noticed this is the FIRST time you've started       ");
-              console.log("    the Tangram wallet. Your wallet is encrypted in        ");
-              console.log("    Vault using Shamir's secret sharing algorithm.         ");
-              console.log("    Please store all of the following keys in a safe       ");
-              console.log("    place. When unsealing the vault you may use any        ");
-              console.log("    1 of these keys. THESE ARE NOT RECOVERY KEYS.          ");
-              console.log();
-              console.log();
-              for (let i = SECRET_THRESHOLD - 1; i < result.keys.length; i++) {
-                console.log(`KEY ${i}: ${result.keys[i]}`)
-              }
-              console.log();
-              console.log();
-              console.log("    You will need to unseal the Vault everytime you        ");
-              console.log("    launch the CLI Wallet.                                 ");
-              console.log("    Please type `vault unseal` to unseal the Vault.        ");
-              console.log("###########################################################");
-              console.log("#                   !!! ATTENTION !!!                     #");
-              console.log("###########################################################");
-              console.log()
-              console.log()
-
-              let buff = Buffer.from(key)
-              let shard = buff.toString('base64');
-
-              key2 = result.keys[1];
-
-              writeFileSync(VAULT_SHARD_PATH, shard);
-
-              return this.hashiVault_.unseal({ secret_shares: 1, key: key });
-            })
-            .then((result) => {
-              return this.hashiVault_.unseal({ secret_shares: 1, key: key2 });
-            })
-            .then((result) => {
-              return this.createVaultServicePolicy();
-            })
-            .then((result) => {
-              return this.createVaultServiceToken().then(
-                (result) => {
-                  this.service_token_ = result.auth.client_token;
-                  writeFileSync(VAULT_SERVICE_TOKEN_PATH, this.service_token_);
+                console.log()
+                console.log()
+                //  TODO: Make share and threshold configurable.
+                console.log("###########################################################");
+                console.log("#                   !!! ATTENTION !!!                     #");
+                console.log("###########################################################");
+                console.log("    We noticed this is the FIRST time you've started       ");
+                console.log("    the Tangram wallet. Your wallet is encrypted in        ");
+                console.log("    Vault using Shamir's secret sharing algorithm.         ");
+                console.log("    Please store all of the following keys in a safe       ");
+                console.log("    place. When unsealing the vault you may use any        ");
+                console.log("    1 of these keys. THESE ARE NOT RECOVERY KEYS.          ");
+                console.log();
+                console.log();
+                for (let i = SECRET_THRESHOLD - 1; i < result.keys.length; i++) {
+                  console.log(`KEY ${i}: ${result.keys[i]}`)
                 }
-              );
-            })
-            .then((result) => {
-              return this.createTemplatedWalletPolicy();
-            })
-            .then((result) => {
-              return this.enableUserpassAuth();
-            })
-            .then((result) => {
-              return this.revokeRootToken();
-            })
-            .catch((err) => {
-              console.error("Vault Error: " + err.message)
-            });
-        } else {
-          let shard64 = readFileSync(VAULT_SHARD_PATH, "utf-8");
-          let buff = Buffer.from(shard64, 'base64');
-          let shard = buff.toString('utf-8');
+                console.log();
+                console.log();
+                console.log("    You will need to unseal the Vault everytime you        ");
+                console.log("    launch the CLI Wallet.                                 ");
+                console.log("    Please type `vault unseal` to unseal the Vault.        ");
+                console.log("###########################################################");
+                console.log("#                   !!! ATTENTION !!!                     #");
+                console.log("###########################################################");
+                console.log()
+                console.log()
 
-          return this.unsealVault(shard).then(() => {
-            return new Promise<void>((resolve, reject) => {
-              try {
-                this.service_token_ = readFileSync(VAULT_SERVICE_TOKEN_PATH, 'utf-8');
-                this.hashiVault_.token = this.service_token_;
-                resolve();
-              }
-              catch (e) {
-                reject(e);
-              }
+                let buff = Buffer.from(key)
+                let shard = buff.toString('base64');
+
+                key2 = result.keys[1];
+
+                writeFileSync(VAULT_SHARD_PATH, shard);
+
+                return this.hashiVault_.unseal({ secret_shares: 1, key: key });
+              })
+              .then((result) => {
+                return this.hashiVault_.unseal({ secret_shares: 1, key: key2 });
+              })
+              .then((result) => {
+                return this.createVaultServicePolicy();
+              })
+              .then((result) => {
+                return this.createVaultServiceToken().then(
+                  (result) => {
+                    this.service_token_ = result.auth.client_token;
+                    writeFileSync(VAULT_SERVICE_TOKEN_PATH, this.service_token_);
+                  }
+                );
+              })
+              .then((result) => {
+                return this.createTemplatedWalletPolicy();
+              })
+              .then((result) => {
+                return this.enableUserpassAuth();
+              })
+              .then((result) => {
+                return this.revokeRootToken();
+              })
+              .catch((err) => {
+                console.error("Vault Error: " + err.message)
+              });
+          } else {
+            let shard64 = readFileSync(VAULT_SHARD_PATH, "utf-8");
+            let buff = Buffer.from(shard64, 'base64');
+            let shard = buff.toString('utf-8');
+
+            return this.unsealVault(shard).then(() => {
+              return new Promise<void>((resolve, reject) => {
+                try {
+                  this.service_token_ = readFileSync(VAULT_SERVICE_TOKEN_PATH, 'utf-8');
+                  this.hashiVault_.token = this.service_token_;
+                  resolve();
+                }
+                catch (e) {
+                  reject(e);
+                }
+              });
             });
-          });
-        }
-      })
+          }
+        })
+    }, 3000);
   }
 
   public unsealVault(key: string) {
@@ -320,5 +322,9 @@ export class Vault {
     return this.hashiVault_.list(`secret/wallets/`).then((res) => {
       return res.data.keys;
     });
+  }
+
+  public kill(signal?: string): void {
+    this.vault_process_.kill(signal);
   }
 }
