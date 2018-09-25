@@ -13,6 +13,7 @@ export class WalletCreateCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
         vorpal.command('wallet create <password>', 'Create new wallet')
+            .types({string: ['_']})
             .action(function (args, cb) {
                 self.execute(this, args, cb);
             });
@@ -46,7 +47,7 @@ export class WalletCreateReceiver implements IReceiver {
                 'data',
                 result)
                 .then((r) => {
-                    console.log(`Generated wallet ${result.id}`);
+                    context.log(`Generated wallet ${result.id}`);
                     callback();
                 });
 
