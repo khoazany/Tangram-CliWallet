@@ -15,6 +15,7 @@ export class WalletTransferFundsCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
         vorpal.command('wallet transfer <identifier> <account> <change> <link> <amount> <password>', 'Transfer funds to link account or inter-account.')
+            .types({string: ['_']})
             .action(function (args, cb) {
                 self.execute(this, args, cb);
             });

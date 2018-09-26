@@ -17,6 +17,11 @@ export class CommandService {
         this.commands.push(command);
     }
 
+    public log(message?: any, ...optionalParams: any[]): void
+    {
+        this.vorpal_.log(message, ...optionalParams);
+    }
+
     public listen(): void {
         this.commands.forEach(command => {
             command.register(this.vorpal_);

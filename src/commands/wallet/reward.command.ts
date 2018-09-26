@@ -14,6 +14,7 @@ export class WalletRewardCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
         vorpal.command('wallet reward <identifier> <address> <amount> <password>', 'Reward wallet')
+            .types({string: ['_']})
             .action(function (args, cb) {
                 self.execute(this, args, cb);
             });

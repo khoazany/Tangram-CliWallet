@@ -10,6 +10,7 @@ export class SetNodeEndpointCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
         vorpal.command('setnodeendpoint <identity> <endpoint> <port>', 'Set Kadence contact Endpoint')
+            .types({string: ['_']})
             .action(function (args, cb) {
                 self.execute(this, args, cb);
             });

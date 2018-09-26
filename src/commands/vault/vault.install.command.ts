@@ -41,7 +41,7 @@ export class VaultInstallReceiver implements IReceiver {
         }
 
         fs.writeFile(join(TANGRAM_DEFAULT_DIR, 'vault.json'), JSON.stringify(vault_config, null, 2), function (err) {
-            console.log(err);
+            context.log(err);
             callback();
         });
     }

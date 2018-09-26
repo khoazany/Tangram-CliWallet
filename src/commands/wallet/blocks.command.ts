@@ -10,6 +10,7 @@ export class WalletBlocksCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
         vorpal.command('wallet blocks <identifier> <password>', 'Get wallet blocks')
+            .types({string: ['_']})
             .action(function (args, cb) {
                 self.execute(this, args, cb);
             });

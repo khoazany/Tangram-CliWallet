@@ -16,6 +16,7 @@ export class VaultUnsealCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
         vorpal.command('vault unseal', 'Unseal vault using key(s)')
+            .types({string: ['_']})
             .action(function (args, cb) {
                 var promise = this.prompt([
                     {

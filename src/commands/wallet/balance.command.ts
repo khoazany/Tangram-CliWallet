@@ -12,6 +12,7 @@ export class WalletBalanceCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
         vorpal.command('wallet balance <identifier> <address> <password>', 'Get wallet balance')
+            .types({string: ['_']})
             .action(function (args, cb) {
                 self.execute(this, args, cb);
             });

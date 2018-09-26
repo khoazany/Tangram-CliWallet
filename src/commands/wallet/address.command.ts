@@ -14,6 +14,7 @@ export class WalletAddressCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
         vorpal.command('wallet address <identifier> <password>', 'Add new address')
+            .types({string: ['_']})
             .action(function (args, cb) {
                 self.execute(this, args, cb);
             });
