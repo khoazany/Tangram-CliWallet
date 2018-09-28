@@ -27,31 +27,32 @@ export class WalletBalanceReceiver implements IReceiver {
     constructor(private readonly _app: INestApplicationContext) {
         this._settings = _app.get<Settings>(Settings);
         this._kadence = _app.get<Kadence>(Kadence);
+        this._vault = _app.get<Vault>(Vault);
     }
 
     async execute(context: any, args: any, callback: any): Promise<void> {
-        let wallet = await this._vault.getWalletData(args.identifier, args.password);
-
-        const keyPair: any = R.propOr(null, 'keyPairs', R.find(R.propEq('base58', args.address), wallet.stealth));
-        const payload: any = R.propOr(null, 'payload', R.find(R.propEq('base58', args.address), wallet.stealth));
-        const scan: any = R.propOr(null, 'scan', R.find(R.propEq('base58', args.address), wallet.stealth));
-
-        const messageEntity = new MessageEntity().add(args.identifier,
-            {
-                apiVersion: this._settings.ApiVersion,
-                identifier: args.identifier,
-                address: args.address,
-                xpub: keyPair.publicKey,
-                secretKey: keyPair.secretKey,
-                stealthKeypair: { payload, scan },
-                boxSealKeypair: wallet.box_seal[0]
-            },
-            {
-                topic: Topic.BALANCE,
-                members: [new MemberEntity().add(this._settings.Node, this._settings.NodePort, this._settings.NodeIdentity)]
-            });
-
         try {
+            let wallet = await this._vault.getWalletData(args.identifier, args.password);
+
+            const keyPair: any = R.propOr(null, 'keyPairs', R.find(R.propEq('base58', args.address), wallet.stealth));
+            const payload: any = R.propOr(null, 'payload', R.find(R.propEq('base58', args.address), wallet.stealth));
+            const scan: any = R.propOr(null, 'scan', R.find(R.propEq('base58', args.address), wallet.stealth));
+    
+            const messageEntity = new MessageEntity().add(args.identifier,
+                {
+                    apiVersion: this._settings.ApiVersion,
+                    identifier: args.identifier,
+                    address: args.address,
+                    xpub: keyPair.publicKey,
+                    secretKey: keyPair.secretKey,
+                    stealthKeypair: { payload, scan },
+                    boxSealKeypair: wallet.box_seal[0]
+                },
+                {
+                    topic: Topic.BALANCE,
+                    members: [new MemberEntity().add(this._settings.Node, this._settings.NodePort, this._settings.NodeIdentity)]
+                });
+
             const result = await this._kadence.send(Topic.WALLET, messageEntity);
 
             context.log(result);
