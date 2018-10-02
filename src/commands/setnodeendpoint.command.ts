@@ -37,6 +37,10 @@ export class SetNodeEndpointReceiver implements IReceiver {
 
         const result = await this._kadence.send(Topic.JOIN, messageEntity);
 
+        if(result === "Connected") {
+            this._settings.save();
+        }
+
         context.log(result);
 
         callback();
