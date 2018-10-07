@@ -18,6 +18,7 @@ export class VaultUnsealCommand extends Command {
         vorpal.command('vault unseal', 'Unseal vault using key(s)')
             .types({string: ['_']})
             .action(function (args, cb) {
+                var context = this;
                 var promise = this.prompt([
                     {
                         type: 'password',
@@ -25,7 +26,7 @@ export class VaultUnsealCommand extends Command {
                         message: 'Key: '
                     }
                 ], function (answers) {
-                    self.execute(this, answers, cb);
+                    self.execute(context, answers, cb);
                 });
             });
     }

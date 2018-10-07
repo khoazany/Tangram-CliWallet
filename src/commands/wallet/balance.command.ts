@@ -11,10 +11,29 @@ import { Vault } from "../../vault/vault.service";
 export class WalletBalanceCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
-        vorpal.command('wallet balance <identifier> <address> <password>', 'Get wallet balance')
+        vorpal.command('wallet balance', 'Get wallet balance')
             .types({string: ['_']})
             .action(function (args, cb) {
-                self.execute(this, args, cb);
+                var context = this;
+                this.prompt([
+                    {
+                        type: 'input',
+                        name: 'identifier',
+                        message: 'Identifier: '
+                    },
+                    {
+                        type: 'input',
+                        name: 'address',
+                        message: 'Address: ',
+                    },
+                    {
+                        type: 'password',
+                        name: 'password',
+                        message: 'Password: '
+                    }
+                ], function (answers) {
+                    self.execute(context, answers, cb);
+                });
             });
     }
 }
