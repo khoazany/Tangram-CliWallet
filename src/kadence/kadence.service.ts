@@ -122,9 +122,7 @@ export class Kadence {
     }
 
     private async start_up() {
-        const key = readFileSync(this.settingsService.SSLKeyPath);
-        const cert = readFileSync(this.settingsService.SSLCertificatePath);
-        const transport = new kadence.HTTPTransport(); // new kadence.HTTPSTransport({ key, cert, ca: [] });
+        const transport = new kadence.HTTPTransport();
 
         this.process_events();
 
