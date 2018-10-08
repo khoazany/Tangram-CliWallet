@@ -23,7 +23,8 @@ export class Kadence {
         private readonly vaultService: Vault
     ) {
         this.create_logger();
-        this.self_signed_certificate();
+        // this.self_signed_certificate();
+        this.start_up();
     }
 
     async send(topic: Topic, messageEntity: MessageEntity): Promise<any> {
@@ -121,9 +122,7 @@ export class Kadence {
     }
 
     private async start_up() {
-        const key = readFileSync(this.settingsService.SSLKeyPath);
-        const cert = readFileSync(this.settingsService.SSLCertificatePath);
-        const transport = new kadence.HTTPTransport(); // new kadence.HTTPSTransport({ key, cert, ca: [] });
+        const transport = new kadence.HTTPTransport();
 
         this.process_events();
 
@@ -146,11 +145,14 @@ export class Kadence {
 
         this.verbose_enabled();
 
-        this.node_.listen(this.settingsService.NodeListenPort, () => {
+        this.node_.listen(this.settingsService.NodeListenPort, async () => {
             this.logger_.info(`Kadence listening on port: ${this.node_.contact.port} hostname: ${this.node_.contact.hostname}`);
             this.logger_.info(`Kadence identity: ${this.node_.identity.toString('hex')}`);
             this.settingsService.Identity = this.node_.identity.toString('hex');
             this.settingsService.OnionAddress = this.node_.contact.hostname;
+
+            await this.vaultService.init()
+
             try {
                 this.settingsService.TorPID = this.node_.onion.tor.process.pid;
             } catch (error) { }
@@ -217,27 +219,7 @@ export class Kadence {
     }
 
     private add_plugins() {
-        // this.node_.hashcash = this.node_.plugin(kadence.hashcash({
-        //     methods: [
-        //         Topic.LOCKSTEP,
-        //         Topic.PUBLISH,
-        //         Topic.QUERY,
-        //         Topic.SEED,
-        //         Topic.SUBSCRIBE,
-        //         Topic.WALLET,
-        //         Topic.BALANCE,
-        //         Topic.REWARD,
-        //         Topic.TRANSFER
-        //     ],
-        //     difficulty: 8
-        // }));
         this.node_.quasar = this.node_.plugin(kadence.quasar());
-        // this.node_.eclipse = this.node_.plugin(kadence.eclipse());
-        // this.node_.spartacus = this.node_.plugin(kadence.spartacus());
-        // this.node_.permission = this.node_.plugin(kadence.permission({
-        //     privateKey: this.node_.spartacus.privateKey,
-        //     walletPath: this.settingsService.EmbeddedWalletDirectory
-        // }));
     }
 
     private routing() {

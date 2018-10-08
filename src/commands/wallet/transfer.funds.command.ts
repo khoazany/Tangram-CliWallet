@@ -14,10 +14,45 @@ import { Vault } from "../../vault/vault.service";
 export class WalletTransferFundsCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
-        vorpal.command('wallet transfer <identifier> <account> <change> <link> <amount> <password>', 'Transfer funds to link account or inter-account.')
+        vorpal.command('wallet transfer', 'Transfer funds to link account or inter-account.')
             .types({string: ['_']})
             .action(function (args, cb) {
-                self.execute(this, args, cb);
+                var context = this;
+
+                this.prompt([
+                    {
+                        type: 'input',
+                        name: 'identifier',
+                        message: 'Identifier: '
+                    },
+                    {
+                        type: 'input',
+                        name: 'account',
+                        message: 'Account: ',
+                    },
+                    {
+                        type: 'input',
+                        name: 'change',
+                        message: 'Change: '
+                    },
+                    {
+                        type: 'input',
+                        name: 'link',
+                        message: 'Link: '
+                    },
+                    {
+                        type: 'input',
+                        name: 'amount',
+                        message: 'Amount: '
+                    },
+                    {
+                        type: 'password',
+                        name: 'password',
+                        message: 'Password: '
+                    }
+                ], function (answers) {
+                    self.execute(context, answers, cb);
+                });
             });
     }
 }

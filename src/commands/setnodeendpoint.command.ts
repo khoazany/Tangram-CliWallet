@@ -9,10 +9,30 @@ import { MessageEntity } from "../common/database/entities/message.entity";
 export class SetNodeEndpointCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
-        vorpal.command('setnodeendpoint <identity> <endpoint> <port>', 'Set Kadence contact Endpoint')
+        
+        vorpal.command('setnodeendpoint', 'Set Kadence contact Endpoint')
             .types({string: ['_']})
             .action(function (args, cb) {
-                self.execute(this, args, cb);
+                var context = this;
+                var promise = this.prompt([
+                    {
+                        type: 'input',
+                        name: 'identity',
+                        message: 'Identity: '
+                    },
+                    {
+                        type: 'input',
+                        name: 'endpoint',
+                        message: 'Endpoint: '
+                    },
+                    {
+                        type: 'input',
+                        name: 'port',
+                        message: 'Port: '
+                    }
+                ], function (answers) {
+                    self.execute(context, answers, cb);
+                });
             });
     }
 }
@@ -36,6 +56,10 @@ export class SetNodeEndpointReceiver implements IReceiver {
         });
 
         const result = await this._kadence.send(Topic.JOIN, messageEntity);
+
+        if(result === "Connected") {
+            this._settings.save();
+        }
 
         context.log(result);
 

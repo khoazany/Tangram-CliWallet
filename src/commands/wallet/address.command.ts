@@ -13,10 +13,24 @@ import { Vault } from "../../vault/vault.service";
 export class WalletAddressCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
-        vorpal.command('wallet address <identifier> <password>', 'Add new address')
-            .types({string: ['_']})
+        vorpal.command('wallet address', 'Add new address')
+            .types({ string: ['_'] })
             .action(function (args, cb) {
-                self.execute(this, args, cb);
+                var context = this;
+                this.prompt([
+                    {
+                        type: 'input',
+                        name: 'identifier',
+                        message: 'Identifier: '
+                    },
+                    {
+                        type: 'password',
+                        name: 'password',
+                        message: 'Password: '
+                    }
+                ], function (answers) {
+                    self.execute(context, answers, cb);
+                });
             });
     }
 }

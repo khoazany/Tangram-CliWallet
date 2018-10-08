@@ -2,9 +2,8 @@ import { Injectable } from "@nestjs/common";
 import { join } from 'path';
 import { ISettings } from "./settings.interface";
 import { existsSync, writeFileSync, readFileSync } from 'fs';
-import { homedir, hostname } from 'os';
+import { homedir } from 'os';
 import * as R from 'ramda';
-import * as kadence from '@kadenceproject/kadence';
 import * as ini from 'ini';
 import * as mkdirp from 'mkdirp';
 import * as bunyan from 'bunyan';
@@ -18,12 +17,6 @@ let defaultSettings = {
     // Applications
     IP: '127.0.0.1',
     Port: 3000,
-
-    // Lightning Memory-Mapped Database
-    LMDBPath: join(TANGRAM_DEFAULT_DIR, 'tangram.db'),
-    MDBPath: join(TANGRAM_DEFAULT_DIR, 'tangram.db/data.mdb'),
-    DatabaseSize: parseInt('2147483648'),
-    MaxDbs: parseInt('3'),
 
     // Process PID
     DaemonPidFilePath: join(KADENCE_DEFAULT_DIR, 'kadence.pid'),
@@ -107,7 +100,6 @@ let defaultSettings = {
     SwaggerApiKey: '',
 
     // Kadence contact
-    NodeName: '',
     NodePort: '',
     NodeIdentity: ''
 }
@@ -190,8 +182,17 @@ export class Settings implements ISettings {
             mkdirp.sync(join(KADENCE_DEFAULT_DIR, 'kadence.onion'));
     }
 
+    public save() {
+        try {
+            const self = this;
+            delete self.logger_;
+            writeFileSync(join(TANGRAM_DEFAULT_DIR, 'config'), ini.stringify(self));
+        } catch (err) {
+            this.logger_.error(err);
+        }
+    }
+
     private write_config(): void {
-        defaultSettings.Identity = kadence.utils.getRandomKeyBuffer().toString('hex');
         mkdirp.sync(TANGRAM_DEFAULT_DIR);
         writeFileSync(join(TANGRAM_DEFAULT_DIR, 'config'), ini.stringify(defaultSettings));
         this.from_json(defaultSettings);

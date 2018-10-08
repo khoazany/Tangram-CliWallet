@@ -13,10 +13,35 @@ import { Vault } from "../../vault/vault.service";
 export class WalletRewardCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
-        vorpal.command('wallet reward <identifier> <address> <amount> <password>', 'Reward wallet')
+        vorpal.command('wallet reward', 'Reward wallet')
             .types({string: ['_']})
             .action(function (args, cb) {
-                self.execute(this, args, cb);
+                var context = this;
+
+                this.prompt([
+                    {
+                        type: 'input',
+                        name: 'identifier',
+                        message: 'Identifier: '
+                    },
+                    {
+                        type: 'input',
+                        name: 'address',
+                        message: 'Address: ',
+                    },
+                    {
+                        type: 'input',
+                        name: 'amount',
+                        message: 'Amount: ',
+                    },
+                    {
+                        type: 'password',
+                        name: 'password',
+                        message: 'Password: '
+                    }
+                ], function (answers) {
+                    self.execute(context, answers, cb);
+                });
             });
     }
 }

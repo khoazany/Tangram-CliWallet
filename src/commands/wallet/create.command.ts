@@ -12,10 +12,19 @@ import { MemberEntity } from "../../common/database/entities/member.entity";
 export class WalletCreateCommand extends Command {
     public register(vorpal: any): void {
         var self = this;
-        vorpal.command('wallet create <password>', 'Create new wallet')
+        vorpal.command('wallet create', 'Create new wallet')
             .types({string: ['_']})
             .action(function (args, cb) {
-                self.execute(this, args, cb);
+                var context = this;
+                this.prompt([
+                    {
+                        type: 'password',
+                        name: 'password',
+                        message: 'Password: '
+                    }
+                ], function (answers) {
+                    self.execute(context, answers, cb);
+                });
             });
     }
 }
